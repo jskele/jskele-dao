@@ -1,0 +1,16 @@
+package org.jskele.libs.data;
+
+import lombok.*;
+import org.jskele.libs.dao.EntityRow;
+
+@Builder
+@Getter
+@ToString
+@EqualsAndHashCode
+@RequiredArgsConstructor
+public class TestTableRow implements EntityRow<TestTableRowId> {
+
+	private final TestTableRowId id;
+	private final String stringColumn;
+	private final Integer numericColumn;
+}

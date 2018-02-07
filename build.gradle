@@ -1,49 +1,73 @@
 plugins {
-	id "io.spring.dependency-management" version "1.0.3.RELEASE"
+    id "io.spring.dependency-management" version "1.0.3.RELEASE"
 }
 
 apply plugin: "java-library"
 
 task wrapper(type: Wrapper) {
-	gradleVersion = '4.1'
+    gradleVersion = '4.1'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-	classifier = 'sources'
-	from sourceSets.main.allSource
+    classifier = 'sources'
+    from sourceSets.main.allSource
 }
 
 artifacts {
-	archives sourcesJar
+    archives sourcesJar
 }
 
 repositories {
-	mavenCentral()
-	jcenter()
-	maven { url 'https://jitpack.io' }
+    mavenCentral()
+    jcenter()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencyManagement {
-	imports {
-		mavenBom 'io.spring.platform:platform-bom:Brussels-SR4'
-	}
+    imports {
+        mavenBom 'io.spring.platform:platform-bom:Brussels-SR4'
+    }
 }
 
 dependencies {
-	compileOnly(
-			'org.projectlombok:lombok',
-	)
+    compileOnly(
+            'org.projectlombok:lombok',
+    )
 
-	compile(
-			'com.google.guava:guava',
-			'org.springframework:spring-core',
-			'org.springframework:spring-jdbc',
-			'org.springframework:spring-context',
-			'commons-beanutils:commons-beanutils',
-			'org.apache.commons:commons-lang3',
+    compile(
+            'com.google.guava:guava',
+            'org.springframework:spring-core',
+            'org.springframework:spring-jdbc',
+            'org.springframework:spring-context',
+            'commons-beanutils:commons-beanutils',
+            'org.apache.commons:commons-lang3',
 
-			'com.github.jskele:lib-values:master-SNAPSHOT',
+            'com.github.jskele:lib-values:master-SNAPSHOT',
 
-			'com.mitchellbosecke:pebble:2.4.0',
-	)
+            'com.mitchellbosecke:pebble:2.4.0',
+            'org.reflections:reflections:0.9.10',
+    )
+
+    testCompileOnly(
+            'org.projectlombok:lombok',
+    )
+
+    testCompile(
+            'org.springframework.boot:spring-boot-starter-jdbc',
+            'org.springframework.boot:spring-boot-starter-test',
+            'ru.yandex.qatools.embed:postgresql-embedded:2.6',
+    )
+
+    testRuntime(
+            'org.springframework.boot:spring-boot-starter-logging',
+            'org.postgresql:postgresql'
+    )
+
+    sourceSets {
+        test {
+            resources {
+                srcDir sourceSets.test.java // sql failid on java DAO klasside kõrval
+            }
+        }
+    }
 }
