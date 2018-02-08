@@ -17,6 +17,7 @@ import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
 
 import org.jskele.libs.dao.impl.DaoSqlParameterSource;
+import org.jskele.libs.dao.impl2.DaoUtils;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 @RequiredArgsConstructor
@@ -28,7 +29,7 @@ class BeanParamProvider extends ParamSourceProvider {
 
     static BeanParamProvider create0(DataSource dataSource, Method method) {
         Class<?> beanClass = method.getParameterTypes()[0];
-        String[] names = constructorProperties(beanClass);
+        String[] names = DaoUtils.constructorProperties(beanClass);
         Method[] readMethods = readMethods(beanClass, names);
 
         return new BeanParamProvider(dataSource, names, readMethods);
