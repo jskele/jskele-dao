@@ -3,9 +3,11 @@ package org.jskele.libs.dao.impl2.sql;
 import java.lang.reflect.Method;
 import java.util.function.Supplier;
 
+import org.jskele.libs.dao.impl2.params.ParamProvider;
+
 public class SqlFactory {
 
-    public String createSql(Method method) {
+    public String createSql(Method method, ParamProvider paramProvider) {
         Supplier<String> sqlSupplier = SqlSupplier(method);
 
         return sqlSupplier.get();

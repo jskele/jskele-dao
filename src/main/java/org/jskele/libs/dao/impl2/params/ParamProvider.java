@@ -24,4 +24,6 @@ public abstract class ParamProvider {
     }
 
     public abstract SqlParameterSource getParams(Object[] args);
+
+    public abstract String[] getNames();
 }

@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import lombok.RequiredArgsConstructor;
 
 import org.jskele.libs.dao.impl2.mappers.RowMapperFactory;
+import org.jskele.libs.dao.impl2.params.ParamProvider;
 import org.jskele.libs.dao.impl2.params.ParamProviderFactory;
 import org.jskele.libs.dao.impl2.sql.SqlFactory;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -20,11 +21,14 @@ public class DaoInvokerFactory {
     private final RowMapperFactory rowMapperFactory;
 
     public DaoInvoker create(Method method) {
+        ParamProvider paramProvider = paramProviderFactory.create(method);
+        String sql = sqlFactory.createSql(method, paramProvider);
+
         if (isQueryList(method)) {
             return new QueryListInvoker(
                 jdbcTemplate,
-                sqlFactory.createSql(method),
-                paramProviderFactory.create(method),
+                sql,
+                paramProvider,
                 rowMapperFactory.create(method)
             );
         }
@@ -32,8 +36,8 @@ public class DaoInvokerFactory {
         if (isQueryObject(method)) {
             return new QueryObjectInvoker(
                 jdbcTemplate,
-                sqlFactory.createSql(method),
-                paramProviderFactory.create(method),
+                sql,
+                paramProvider,
                 rowMapperFactory.create(method)
             );
         }
@@ -41,16 +45,16 @@ public class DaoInvokerFactory {
         if (isUpdateSingle(method)) {
             return new UpdateSingleInvoker(
                 jdbcTemplate,
-                sqlFactory.createSql(method),
-                paramProviderFactory.create(method)
+                sql,
+                paramProvider
             );
         }
 
         if (isUpdateBatch(method)) {
             return new UpdateBatchInvoker(
                 jdbcTemplate,
-                sqlFactory.createSql(method),
-                paramProviderFactory.create(method)
+                sql,
+                paramProvider
             );
         }
 
