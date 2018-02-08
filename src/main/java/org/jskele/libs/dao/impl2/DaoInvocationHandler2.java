@@ -16,7 +16,7 @@ class DaoInvocationHandler2 extends AbstractInvocationHandler {
 
     @Override
     protected Object handleInvocation(Object proxy, Method method, Object[] args) {
-        DaoInvoker invoker = invokerFactory.createInvoker(method);
+        DaoInvoker invoker = invokerFactory.create(method);
 
         // TODO: add cache (Meelis Lehtmets, 2018-02-08)
 

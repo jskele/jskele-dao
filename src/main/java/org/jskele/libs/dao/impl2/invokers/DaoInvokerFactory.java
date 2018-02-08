@@ -4,6 +4,9 @@ import java.lang.reflect.Method;
 
 import lombok.RequiredArgsConstructor;
 
+import org.jskele.libs.dao.impl2.mappers.RowMapperFactory;
+import org.jskele.libs.dao.impl2.params.ParamProviderFactory;
+import org.jskele.libs.dao.impl2.sql.SqlFactory;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -12,29 +15,43 @@ import org.springframework.stereotype.Component;
 public class DaoInvokerFactory {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
+    private final SqlFactory sqlFactory;
+    private final ParamProviderFactory paramProviderFactory;
+    private final RowMapperFactory rowMapperFactory;
 
-    public DaoInvoker createInvoker(Method method) {
-        DaoInvokerConstructor constructor = constructor(method);
-
-        return constructor.create(jdbcTemplate, method);
-    }
-
-
-    private DaoInvokerConstructor constructor(Method method) {
+    public DaoInvoker create(Method method) {
         if (isQueryList(method)) {
-            return QueryListInvoker::create;
+            return new QueryListInvoker(
+                jdbcTemplate,
+                sqlFactory.createSql(method),
+                paramProviderFactory.create(method),
+                rowMapperFactory.create(method)
+            );
         }
 
         if (isQueryObject(method)) {
-            return QueryObjectInvoker::new;
+            return new QueryObjectInvoker(
+                jdbcTemplate,
+                sqlFactory.createSql(method),
+                paramProviderFactory.create(method),
+                rowMapperFactory.create(method)
+            );
         }
 
         if (isUpdateSingle(method)) {
-            return UpdateSingleInvoker::new;
+            return new UpdateSingleInvoker(
+                jdbcTemplate,
+                sqlFactory.createSql(method),
+                paramProviderFactory.create(method)
+            );
         }
 
         if (isUpdateBatch(method)) {
-            return UpdateBatchInvoker::new;
+            return new UpdateBatchInvoker(
+                jdbcTemplate,
+                sqlFactory.createSql(method),
+                paramProviderFactory.create(method)
+            );
         }
 
         throw new IllegalStateException("DaoInvoker not found for Method " + method);
