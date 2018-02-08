@@ -21,7 +21,7 @@ import org.jskele.libs.dao.impl2.DaoUtils;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 @RequiredArgsConstructor
-class BeanParamProvider extends ParamSourceProvider {
+class BeanParamProvider extends ParamProvider {
     private final DataSource dataSource;
     private final String[] parameterNames;
     private final Method[] readMethods;

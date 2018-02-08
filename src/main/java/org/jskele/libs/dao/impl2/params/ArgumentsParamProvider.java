@@ -12,7 +12,7 @@ import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 @RequiredArgsConstructor
-class ArgumentsParamProvider extends ParamSourceProvider {
+class ArgumentsParamProvider extends ParamProvider {
     private static final ParameterNameDiscoverer PARAMETER_NAME_DISCOVERER = new DefaultParameterNameDiscoverer();
 
     private final DataSource dataSource;

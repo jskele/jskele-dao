@@ -7,9 +7,9 @@ import javax.sql.DataSource;
 import org.jskele.libs.dao.impl2.DaoUtils;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
-public abstract class ParamSourceProvider {
+public abstract class ParamProvider {
 
-    static ParamSourceProvider create(DataSource dataSource, Method method) {
+    static ParamProvider create(DataSource dataSource, Method method) {
         int parameterCount = method.getParameterCount();
 
         if (parameterCount == 0) {
