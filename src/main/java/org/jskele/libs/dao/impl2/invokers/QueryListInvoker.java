@@ -13,26 +13,37 @@ class QueryListInvoker implements DaoInvoker {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
     private final Method method;
+    private final String sql;
+    private final RowMapper<?> rowMapper;
+
+    public static QueryListInvoker create(
+        NamedParameterJdbcTemplate jdbcTemplate,
+        Method method
+    ) {
+        return new QueryListInvoker(
+            jdbcTemplate,
+            method,
+            sql(method),
+            rowMapper(method)
+        );
+    }
+
+    private static String sql(Method method) {
+        return null;
+    }
+
+    private static RowMapper rowMapper(Method method) {
+        return null;
+    }
 
     public Object invoke(Object[] args) {
-        String sql = sql(method);
         SqlParameterSource parameterSource = parameterSource(method, args);
-        RowMapper rowMapper = rowMapper(method);
 
         return jdbcTemplate.query(sql, parameterSource, rowMapper);
-    }
-
-    private String sql(Method method) {
-        return null;
-    }
-
-    private RowMapper rowMapper(Method method) {
-        return null;
     }
 
     private SqlParameterSource parameterSource(Method method, Object[] args) {
         return null;
     }
-
 
 }

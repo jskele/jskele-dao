@@ -1,16 +1,11 @@
 package org.jskele.libs.dao.impl2.invokers;
 
 import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Function;
 
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
-
-import com.google.common.collect.ImmutableList;
 
 @Component
 @RequiredArgsConstructor
@@ -18,25 +13,46 @@ public class DaoInvokerFactory {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
 
-    private static List<Function<Method, DaoInvokerConstructor>> mappers = ImmutableList.of(
-        DaoInvokerFactory::queryList
-    );
+    public DaoInvoker createInvoker(Method method) {
+        DaoInvokerConstructor constructor = constructor(method);
 
-   public DaoInvoker createInvoker(Method method) {
-       return mappers.stream()
-           .map(f -> f.apply(method))
-           .filter(Objects::nonNull)
-           .findFirst()
-           .orElseThrow(()-> new IllegalStateException("DaoInvoker not found for Method " + method))
-           .create(jdbcTemplate, method);
-   }
-
-    private static DaoInvokerConstructor queryList(Method method) {
-       if (true) {
-        return QueryListInvoker::new;
-       }
-
-       return null;
+        return constructor.create(jdbcTemplate, method);
     }
 
+
+    private DaoInvokerConstructor constructor(Method method) {
+        if (isQueryList(method)) {
+            return QueryListInvoker::create;
+        }
+
+        if (isQueryObject(method)) {
+            return QueryObjectInvoker::new;
+        }
+
+        if (isUpdateSingle(method)) {
+            return UpdateSingleInvoker::new;
+        }
+
+        if (isUpdateBatch(method)) {
+            return UpdateBatchInvoker::new;
+        }
+
+        throw new IllegalStateException("DaoInvoker not found for Method " + method);
+    }
+
+    private boolean isUpdateBatch(Method method) {
+        return false;
+    }
+
+    private boolean isUpdateSingle(Method method) {
+        return false;
+    }
+
+    private boolean isQueryObject(Method method) {
+        return false;
+    }
+
+    private boolean isQueryList(Method method) {
+        return false;
+    }
 }

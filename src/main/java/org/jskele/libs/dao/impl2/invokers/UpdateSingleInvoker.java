@@ -4,19 +4,16 @@ import java.lang.reflect.Method;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.stereotype.Component;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
-@Component
 @RequiredArgsConstructor
 class UpdateSingleInvoker implements DaoInvoker {
 
-    @Override
-    public boolean accepts(Method method) {
-        return false;
-    }
+    private final NamedParameterJdbcTemplate jdbcTemplate;
+    private final Method method;
 
     @Override
-    public Object invoke(Method method, Object[] args) {
+    public Object invoke(Object[] args) {
         return null;
     }
 }
