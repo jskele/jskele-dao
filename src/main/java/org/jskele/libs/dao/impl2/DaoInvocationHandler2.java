@@ -1,30 +1,26 @@
 package org.jskele.libs.dao.impl2;
 
 import java.lang.reflect.Method;
-import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 
 import org.jskele.libs.dao.impl2.invokers.DaoInvoker;
+import org.jskele.libs.dao.impl2.invokers.DaoInvokerFactory;
 
 import com.google.common.reflect.AbstractInvocationHandler;
 
 @RequiredArgsConstructor
 class DaoInvocationHandler2 extends AbstractInvocationHandler {
 
-    private final List<DaoInvoker> invokers;
+    private final DaoInvokerFactory invokerFactory;
 
     @Override
     protected Object handleInvocation(Object proxy, Method method, Object[] args) {
-        DaoInvoker invoker = findInvoker(method);
-        return invoker.invoke(method, args);
-    }
+        DaoInvoker invoker = invokerFactory.createInvoker(method);
 
-    private DaoInvoker findInvoker(Method method){
-        return invokers.stream()
-            .filter(invoker -> invoker.accepts(method))
-            .findFirst()
-            .orElseThrow(()-> new IllegalArgumentException("No matching invoker found for method " + method));
+        // TODO: add cache (Meelis Lehtmets, 2018-02-08)
+
+        return invoker.invoke(args);
     }
 
 }

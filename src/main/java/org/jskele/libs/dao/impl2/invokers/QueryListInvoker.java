@@ -7,21 +7,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
-import org.springframework.stereotype.Component;
 
-@Component
 @RequiredArgsConstructor
 class QueryListInvoker implements DaoInvoker {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
+    private final Method method;
 
-    @Override
-    public boolean accepts(Method method) {
-        return false;
-    }
-
-    @Override
-    public Object invoke(Method method, Object[] args) {
+    public Object invoke(Object[] args) {
         String sql = sql(method);
         SqlParameterSource parameterSource = parameterSource(method, args);
         RowMapper rowMapper = rowMapper(method);
