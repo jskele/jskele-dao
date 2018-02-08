@@ -2,11 +2,13 @@ package org.jskele.libs.dao;
 
 import org.jskele.libs.dao.impl.DaoFactoryImpl;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @Configuration
+@ComponentScan
 public class DaoAutoConfiguration {
 
 	@Bean
