@@ -4,11 +4,15 @@ import java.lang.reflect.Method;
 
 import lombok.RequiredArgsConstructor;
 
+import org.jskele.libs.dao.impl2.MethodDetails;
 import org.jskele.libs.dao.impl2.mappers.RowMapperFactory;
 import org.jskele.libs.dao.impl2.params.ParamProvider;
 import org.jskele.libs.dao.impl2.params.ParamProviderFactory;
+import org.jskele.libs.dao.impl2.sql.SqlProvider;
 import org.jskele.libs.dao.impl2.sql.SqlProviderFactory;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -21,25 +25,26 @@ public class DaoInvokerFactory {
     private final RowMapperFactory rowMapperFactory;
 
     public DaoInvoker create(Method method) {
+        MethodDetails details = new MethodDetails(method);
+
         ParamProvider paramProvider = paramProviderFactory.create(method);
-        String sql = sqlProviderFactory.createSql(method, paramProvider);
+        SqlProvider sqlProvider = sqlProviderFactory.createSql(method, paramProvider);
+        RowMapper<?> rowMapper = rowMapperFactory.create(method);
 
         if (isQueryList(method)) {
-            return new QueryListInvoker(
-                jdbcTemplate,
-                sql,
-                paramProvider,
-                rowMapperFactory.create(method)
-            );
+            return args -> {
+                SqlParameterSource params = paramProvider.getParams(args);
+                String sql = sqlProvider.createSql(params);
+                return jdbcTemplate.query(sql, params, rowMapper);
+            };
         }
 
         if (isQueryObject(method)) {
-            return new QueryObjectInvoker(
-                jdbcTemplate,
-                sql,
-                paramProvider,
-                rowMapperFactory.create(method)
-            );
+            return args -> {
+                SqlParameterSource params = paramProvider.getParams(args);
+                String sql = sqlProvider.createSql(params);
+                return jdbcTemplate.queryForObject(sql, params, rowMapper);
+            };
         }
 
         if (isUpdateSingle(method)) {
