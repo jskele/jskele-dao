@@ -8,6 +8,8 @@ public interface ParameterExtractor {
 
     String[] names();
 
+    Class<?>[] types();
+
     Object[] values(Object[] args);
 
     static ParameterExtractor create(Method method) {

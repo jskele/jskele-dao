@@ -12,15 +12,21 @@ class ArgumentsParameterExtractor implements ParameterExtractor {
     private static final ParameterNameDiscoverer PARAMETER_NAME_DISCOVERER = new DefaultParameterNameDiscoverer();
 
     private final String[] parameterNames;
+    private final Class<?>[] types;
 
     static ArgumentsParameterExtractor create(Method method) {
         String[] parameterNames = PARAMETER_NAME_DISCOVERER.getParameterNames(method);
-        return new ArgumentsParameterExtractor(parameterNames);
+        return new ArgumentsParameterExtractor(parameterNames, method.getParameterTypes());
     }
 
     @Override
     public String[] names() {
         return parameterNames;
+    }
+
+    @Override
+    public Class<?>[] types() {
+        return types;
     }
 
     @Override

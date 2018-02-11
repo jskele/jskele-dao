@@ -20,17 +20,28 @@ import org.jskele.libs.dao.impl2.DaoUtils;
 class BeanParameterExtractor implements ParameterExtractor {
     private final String[] parameterNames;
     private final Method[] readMethods;
+    private final Class<?>[] types;
 
     static BeanParameterExtractor create(Method method) {
         Class<?> beanClass = method.getParameterTypes()[0];
         String[] names = DaoUtils.constructorProperties(beanClass);
         Method[] readMethods = readMethods(beanClass, names);
-        return new BeanParameterExtractor(names, readMethods);
+
+        Class<?>[] types = Arrays.stream(readMethods)
+            .map(Method::getReturnType)
+            .toArray(Class<?>[]::new);
+
+        return new BeanParameterExtractor(names, readMethods, types);
     }
 
     @Override
     public String[] names() {
         return parameterNames;
+    }
+
+    @Override
+    public Class<?>[] types() {
+        return types;
     }
 
     @Override
