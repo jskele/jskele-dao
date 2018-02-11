@@ -1,5 +1,6 @@
 package org.jskele.libs.dao.impl2;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -35,4 +36,9 @@ public class MethodDetails {
         return method.getReturnType();
     }
 
+
+    private boolean hasAnnotation(Class<? extends Annotation> annotationClass) {
+        Annotation annotation = method.getAnnotation(annotationClass);
+        return annotation != null;
+    }
 }
