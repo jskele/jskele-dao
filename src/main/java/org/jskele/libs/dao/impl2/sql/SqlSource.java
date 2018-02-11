@@ -1,9 +1,9 @@
-package org.jskele.libs.dao.impl2.sql2;
+package org.jskele.libs.dao.impl2.sql;
 
 import java.lang.reflect.Method;
 
 import org.jskele.libs.dao.GenerateSql;
-import org.jskele.libs.dao.impl2.params2.ParameterExtractor;
+import org.jskele.libs.dao.impl2.params.ParameterExtractor;
 
 public interface SqlSource {
 

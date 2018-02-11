@@ -10,7 +10,7 @@ import org.jskele.libs.dao.impl2.invokers.DaoInvokerFactory;
 import com.google.common.reflect.AbstractInvocationHandler;
 
 @RequiredArgsConstructor
-class DaoInvocationHandler2 extends AbstractInvocationHandler {
+class DaoInvocationHandler extends AbstractInvocationHandler {
 
     private final DaoInvokerFactory invokerFactory;
 

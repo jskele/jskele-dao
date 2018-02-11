@@ -6,7 +6,7 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 
-import org.jskele.libs.dao.impl2.params2.ParameterExtractor;
+import org.jskele.libs.dao.impl2.params.ParameterExtractor;
 
 @RequiredArgsConstructor
 public class MethodDetails {

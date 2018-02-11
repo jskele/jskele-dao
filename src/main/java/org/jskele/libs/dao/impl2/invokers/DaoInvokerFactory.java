@@ -12,8 +12,8 @@ import org.jskele.libs.dao.impl.ConvertingSingleColumnRowMapper;
 import org.jskele.libs.dao.impl.DaoSqlParameterSource;
 import org.jskele.libs.dao.impl2.DaoUtils;
 import org.jskele.libs.dao.impl2.MethodDetails;
-import org.jskele.libs.dao.impl2.params2.ParameterExtractor;
-import org.jskele.libs.dao.impl2.sql2.SqlSource;
+import org.jskele.libs.dao.impl2.params.ParameterExtractor;
+import org.jskele.libs.dao.impl2.sql.SqlSource;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -34,16 +34,6 @@ public class DaoInvokerFactory {
         ParameterExtractor extractor = details.parameterExtractor();
         SqlSource sqlSource = SqlSource.create(method, extractor);
 
-        RowMapper<?> rowMapper = rowMapper(method);
-
-        if (details.isQueryList()) {
-            return args -> {
-                SqlParameterSource params = parameterSource(extractor, args);
-                String sql = sqlSource.generateSql(args);
-                return jdbcTemplate.query(sql, params, rowMapper);
-            };
-        }
-
         if (details.isUpdate()) {
             return args -> {
                 SqlParameterSource params = parameterSource(extractor, args);
@@ -57,6 +47,16 @@ public class DaoInvokerFactory {
                 SqlParameterSource[] paramsArray = parameterSourceArray(extractor, args);
                 String sql = sqlSource.generateSql(args);
                 return jdbcTemplate.batchUpdate(sql, paramsArray);
+            };
+        }
+
+        RowMapper<?> rowMapper = rowMapper(method);
+
+        if (details.isQueryList()) {
+            return args -> {
+                SqlParameterSource params = parameterSource(extractor, args);
+                String sql = sqlSource.generateSql(args);
+                return jdbcTemplate.query(sql, params, rowMapper);
             };
         }
 

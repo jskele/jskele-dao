@@ -2,69 +2,58 @@ package org.jskele.libs.dao.impl2.sql;
 
 import static java.util.stream.Collectors.joining;
 
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import lombok.RequiredArgsConstructor;
 
 import org.apache.commons.lang3.StringUtils;
-import org.jskele.libs.dao.GenerateSql;
+import org.jskele.libs.dao.ExcludeNulls;
 import org.jskele.libs.dao.impl2.DaoUtils;
-import org.jskele.libs.dao.impl2.params.ParamProvider;
+import org.jskele.libs.dao.impl2.params.ParameterExtractor;
 import org.jskele.libs.values.LongValue;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Converter;
 
 @RequiredArgsConstructor
-class GeneratedSqlSource implements SqlProvider {
-    private final Converter<String, String> CONVERTER = CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
+class SqlGenerator {
+    private static final Converter<String, String> CONVERTER = CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
+
     private final Method method;
-    private final ParamProvider paramProvider;
-    private boolean numericId;
+    private final ParameterExtractor extractor;
 
-    public boolean isPresent() {
-        GenerateSql annotation = method.getAnnotation(GenerateSql.class);
-        return annotation != null;
-    }
-
-    @Override
-    public String getSql(SqlParameterSource parameterSource) {
-
-        if (isSelect()) {
-            return generateSelect();
+    public SqlSource createSource() {
+        if (hasPrefix("delete")) {
+            return staticSqlSource(generateDelete());
         }
 
-        if (isDelete()) {
-            return generateDelete();
+        if (hasPrefix("insert")) {
+            return staticSqlSource(generateInsert());
         }
 
-        if (isInsert()) {
-            return generateInsert();
-        }
-
-        if (isUpdate()) {
-            return generateUpdate();
+        if (hasPrefix("update")) {
+            return this::generateUpdate;
         }
 
         if (hasPrefix("exists")) {
-            return generateExists();
+            return staticSqlSource(generateExists());
         }
 
         if (hasPrefix("count")) {
-            return generateCount();
+            return staticSqlSource(generateCount());
         }
 
-        return null;
+        return staticSqlSource(generateSelect());
     }
 
-    private String generateUpdate() {
-        return "UPDATE " + tableName() + " SET " + updateColumns() + " WHERE id = :id";
+    private SqlSource staticSqlSource(String sql) {
+        return args -> sql;
+    }
+
+    private String generateUpdate(Object[] args) {
+        return "UPDATE " + tableName() + " SET " + updateColumns(args) + " WHERE id = :id";
     }
 
     private String generateCount() {
@@ -96,26 +85,40 @@ class GeneratedSqlSource implements SqlProvider {
     }
 
     private String insertValues() {
-        String[] paramNames = paramProvider.getNames();
+        String[] paramNames = extractor.names();
         return Arrays.stream(paramNames)
-            .filter(name -> !(isNumericId() && name.equals("id")))
+            .filter(this::notGeneratedColumn)
             .map(name -> ":" + name)
             .collect(joining(", "));
     }
 
+    private String updateColumns(Object[] args) {
+        Object[] values = extractor.values(args);
+        String[] paramNames = extractor.names();
 
-    private String updateColumns() {
-        String[] paramNames = paramProvider.getNames();
+        paramNames = excludeNulls(paramNames, values);
+
         return Arrays.stream(paramNames)
             .filter(name -> !name.equals("id"))
             .map(this::columnEqualsParameter)
             .collect(joining(", "));
     }
 
+    private String[] excludeNulls(String[] names, Object[] values) {
+        if (method.getAnnotation(ExcludeNulls.class) == null) {
+            return names;
+        }
+
+        return IntStream.range(0, names.length)
+            .filter(i -> values[i] != null)
+            .mapToObj(i -> names[i])
+            .toArray(String[]::new);
+    }
+
     private String insertColumns() {
-        String[] paramNames = paramProvider.getNames();
+        String[] paramNames = extractor.names();
         return Arrays.stream(paramNames)
-            .filter(name -> !(isNumericId() && name.equals("id")))
+            .filter(this::notGeneratedColumn)
             .map(this::convert)
             .map(this::esc)
             .collect(joining(", "));
@@ -140,7 +143,7 @@ class GeneratedSqlSource implements SqlProvider {
     }
 
     private String whereCondition() {
-        String[] paramNames = paramProvider.getNames();
+        String[] paramNames = extractor.names();
 
         if (paramNames.length == 0) {
             return "";
@@ -157,6 +160,11 @@ class GeneratedSqlSource implements SqlProvider {
         return esc(convert(name)) + " = :" + name;
     }
 
+
+    private boolean notGeneratedColumn(String name) {
+        return !(isNumericId() && name.equals("id"));
+    }
+
     private String tableName() {
         String daoName = method.getDeclaringClass().getSimpleName();
         String camelTableName = StringUtils.removeEnd(daoName, "Dao");
@@ -165,46 +173,18 @@ class GeneratedSqlSource implements SqlProvider {
         return esc(tableName);
     }
 
-    public boolean isSelect() {
-        return hasPrefix("select");
-    }
-
-    public boolean isDelete() {
-        return hasPrefix("delete");
-    }
-
     private boolean hasPrefix(String prefix) {
         return method.getName().startsWith(prefix);
     }
 
-    public boolean isInsert() {
-        return hasPrefix("insert");
-    }
-
-    public boolean isUpdate() {
-        return hasPrefix("update");
-    }
-
-
     private boolean isNumericId() {
-        Class<?> returnType = method.getReturnType();
+        int idIndex = Arrays.asList(extractor.names()).indexOf("id");
 
-        BeanInfo beanInfo;
-        try {
-            beanInfo = Introspector.getBeanInfo(returnType);
-        } catch (IntrospectionException e) {
-            throw new RuntimeException(e);
-        }
-
-        Class<?> idClass = Arrays.stream(beanInfo.getPropertyDescriptors())
-            .filter(pd -> pd.getName().equals("id"))
-            .map(PropertyDescriptor::getPropertyType)
-            .findAny()
-            .orElse(null);
-
-        if (idClass == null) {
+        if (idIndex == -1) {
             return false;
         }
+
+        Class<?> idClass = extractor.types()[idIndex];
 
         if (LongValue.class.isAssignableFrom(idClass)) {
             return true;
@@ -212,4 +192,5 @@ class GeneratedSqlSource implements SqlProvider {
 
         return Number.class.isAssignableFrom(idClass);
     }
+
 }

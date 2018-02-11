@@ -12,43 +12,44 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Map;
 
-import javax.sql.DataSource;
-
 import lombok.RequiredArgsConstructor;
 
-import org.jskele.libs.dao.impl.DaoSqlParameterSource;
 import org.jskele.libs.dao.impl2.DaoUtils;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 @RequiredArgsConstructor
-class BeanParamProvider extends ParamProvider {
-    private final DataSource dataSource;
+class BeanParameterExtractor implements ParameterExtractor {
     private final String[] parameterNames;
     private final Method[] readMethods;
+    private final Class<?>[] types;
 
-
-    static BeanParamProvider create0(DataSource dataSource, Method method) {
+    static BeanParameterExtractor create(Method method) {
         Class<?> beanClass = method.getParameterTypes()[0];
         String[] names = DaoUtils.constructorProperties(beanClass);
         Method[] readMethods = readMethods(beanClass, names);
 
-        return new BeanParamProvider(dataSource, names, readMethods);
+        Class<?>[] types = Arrays.stream(readMethods)
+            .map(Method::getReturnType)
+            .toArray(Class<?>[]::new);
+
+        return new BeanParameterExtractor(names, readMethods, types);
     }
 
     @Override
-    public SqlParameterSource getParams(Object[] args) {
-        DaoSqlParameterSource parameterSource = new DaoSqlParameterSource(dataSource);
+    public String[] names() {
+        return parameterNames;
+    }
 
+    @Override
+    public Class<?>[] types() {
+        return types;
+    }
+
+    @Override
+    public Object[] values(Object[] args) {
         Object bean = args[0];
-        for (int i = 0; i < parameterNames.length; i++) {
-            String name = parameterNames[i];
-            Object value = readValue(bean, readMethods[i]);
-
-            parameterSource.addValue(name, value);
-        }
-
-        return parameterSource;
-
+        return Arrays.stream(readMethods)
+            .map(a -> readValue(bean, a))
+            .toArray();
     }
 
     private Object readValue(Object bean, Method readMethod) {
@@ -69,9 +70,9 @@ class BeanParamProvider extends ParamProvider {
                     PropertyDescriptor::getReadMethod
                 ));
 
-            return (Method[]) Arrays.stream(properties)
+            return Arrays.stream(properties)
                 .map(collect::get)
-                .toArray();
+                .toArray(Method[]::new);
         } catch (IntrospectionException e) {
             throw new RuntimeException(e);
         }
