@@ -5,7 +5,6 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 
-import org.jskele.libs.dao.impl2.params.ParamProvider;
 import org.jskele.libs.dao.impl2.params2.ParameterExtractor;
 
 @RequiredArgsConstructor
@@ -16,13 +15,24 @@ public class MethodDetails {
         return DaoUtils.rowClass(method);
     }
 
-    public boolean isQueryList(){
-        boolean isList = method.getReturnType().isAssignableFrom(List.class);
-
-        return isList;
+    public boolean isQueryList() {
+        return returnType().equals(List.class);
     }
 
-    public ParameterExtractor paramProvider(){
-
+    public boolean isUpdate() {
+        return returnType().equals(int.class);
     }
+
+    public boolean isBatchUpdate() {
+        return returnType().equals(int[].class);
+    }
+
+    public ParameterExtractor parameterExtractor() {
+        return ParameterExtractor.create(method);
+    }
+
+    private Class<?> returnType() {
+        return method.getReturnType();
+    }
+
 }
