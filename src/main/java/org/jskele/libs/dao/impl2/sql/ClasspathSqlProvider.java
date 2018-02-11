@@ -11,12 +11,12 @@ import com.google.common.io.Resources;
 import com.google.common.reflect.Reflection;
 
 @RequiredArgsConstructor
-class ClasspathSqlSource {
+class ClasspathSqlProvider {
 
     private final URL resourceUrl;
 
-    static ClasspathSqlSource create(Method method){
-        return new ClasspathSqlSource(resourceUrl(method));
+    static ClasspathSqlProvider create(Method method){
+        return new ClasspathSqlProvider(resourceUrl(method));
     }
 
     public boolean isPresent(){

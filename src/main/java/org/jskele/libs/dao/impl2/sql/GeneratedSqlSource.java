@@ -16,13 +16,14 @@ import org.jskele.libs.dao.GenerateSql;
 import org.jskele.libs.dao.impl2.DaoUtils;
 import org.jskele.libs.dao.impl2.params.ParamProvider;
 import org.jskele.libs.values.LongValue;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Converter;
 
 @RequiredArgsConstructor
-class GeneratedSqlSource {
-    private static final Converter<String, String> CONVERTER = CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
+class GeneratedSqlSource implements SqlProvider {
+    private final Converter<String, String> CONVERTER = CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
     private final Method method;
     private final ParamProvider paramProvider;
     private boolean numericId;
@@ -32,7 +33,9 @@ class GeneratedSqlSource {
         return annotation != null;
     }
 
-    public String getSql() {
+    @Override
+    public String getSql(SqlParameterSource parameterSource) {
+
         if (isSelect()) {
             return generateSelect();
         }

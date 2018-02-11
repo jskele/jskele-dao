@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.jskele.libs.dao.impl2.mappers.RowMapperFactory;
 import org.jskele.libs.dao.impl2.params.ParamProvider;
 import org.jskele.libs.dao.impl2.params.ParamProviderFactory;
-import org.jskele.libs.dao.impl2.sql.SqlFactory;
+import org.jskele.libs.dao.impl2.sql.SqlProviderFactory;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -16,13 +16,13 @@ import org.springframework.stereotype.Component;
 public class DaoInvokerFactory {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
-    private final SqlFactory sqlFactory;
+    private final SqlProviderFactory sqlProviderFactory;
     private final ParamProviderFactory paramProviderFactory;
     private final RowMapperFactory rowMapperFactory;
 
     public DaoInvoker create(Method method) {
         ParamProvider paramProvider = paramProviderFactory.create(method);
-        String sql = sqlFactory.createSql(method, paramProvider);
+        String sql = sqlProviderFactory.createSql(method, paramProvider);
 
         if (isQueryList(method)) {
             return new QueryListInvoker(
