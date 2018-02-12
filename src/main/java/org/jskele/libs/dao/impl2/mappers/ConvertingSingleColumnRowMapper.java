@@ -3,7 +3,7 @@ package org.jskele.libs.dao.impl2.mappers;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.SingleColumnRowMapper;
 
-class ConvertingSingleColumnRowMapper<T> extends SingleColumnRowMapper<T> {
+public class ConvertingSingleColumnRowMapper<T> extends SingleColumnRowMapper<T> {
 
 	private final ConversionService conversionService;
 

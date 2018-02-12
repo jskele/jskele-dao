@@ -15,7 +15,7 @@ class DaoFactory {
     private final DaoInvokerFactory invokerFactory;
 
     public <T extends Dao> T create(Class<T> daoClass) {
-        DaoInvocationHandler handler = new DaoInvocationHandler(invokerFactory);
+        DaoInvocationHandler handler = new DaoInvocationHandler(invokerFactory, daoClass);
         return Reflection.newProxy(daoClass, handler);
     }
 }

@@ -32,7 +32,7 @@ import com.google.common.primitives.Primitives;
 
 @Slf4j
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-class ConstructorRowMapper<T> implements RowMapper<T> {
+public class ConstructorRowMapper<T> implements RowMapper<T> {
 
 	public ConstructorRowMapper(Class<T> rowClass) {
 		this(findConstructor(rowClass), new DefaultConversionService());

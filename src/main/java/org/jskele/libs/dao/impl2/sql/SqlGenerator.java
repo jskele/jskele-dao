@@ -10,6 +10,7 @@ import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jskele.libs.dao.Dao;
 import org.jskele.libs.dao.ExcludeNulls;
 import org.jskele.libs.dao.impl2.DaoUtils;
 import org.jskele.libs.dao.impl2.params.ParameterExtractor;
@@ -22,6 +23,7 @@ import com.google.common.base.Converter;
 class SqlGenerator {
     private static final Converter<String, String> CONVERTER = CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
 
+    private final Class<? extends Dao> daoClass;
     private final Method method;
     private final ParameterExtractor extractor;
 
@@ -94,10 +96,7 @@ class SqlGenerator {
     }
 
     private String updateColumns(Object[] args) {
-        Object[] values = extractor.values(args);
-        String[] paramNames = extractor.names();
-
-        paramNames = excludeNulls(paramNames, values);
+        String[] paramNames = updateParamNames(args);
 
         return Arrays.stream(paramNames)
             .filter(name -> !name.equals("id"))
@@ -105,10 +104,13 @@ class SqlGenerator {
             .collect(joining(", "));
     }
 
-    private String[] excludeNulls(String[] names, Object[] values) {
-        if (hasAnnotation(method, ExcludeNulls.class)) {
+    private String[] updateParamNames(Object[] args) {
+        String[] names = extractor.names();
+        if (!hasAnnotation(method, ExcludeNulls.class)) {
             return names;
         }
+
+        Object[] values = extractor.values(args);
 
         return IntStream.range(0, names.length)
             .filter(i -> values[i] != null)
@@ -126,7 +128,7 @@ class SqlGenerator {
     }
 
     private String selectColumns() {
-        Class<?> rowClass = DaoUtils.rowClass(method);
+        Class<?> rowClass = DaoUtils.rowClass(method, daoClass);
         String[] columnNames = DaoUtils.beanProperties(rowClass);
 
         return Arrays.stream(columnNames)
@@ -167,7 +169,7 @@ class SqlGenerator {
     }
 
     private String tableName() {
-        String daoName = method.getDeclaringClass().getSimpleName();
+        String daoName = daoClass.getSimpleName();
         String camelTableName = StringUtils.removeEnd(daoName, "Dao");
 
         String tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, camelTableName);

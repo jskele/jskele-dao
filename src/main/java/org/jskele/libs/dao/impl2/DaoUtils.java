@@ -7,11 +7,12 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
+import org.jskele.libs.dao.Dao;
 import org.springframework.core.ResolvableType;
 
 public class DaoUtils {
     public static boolean isBean(Class<?> paramType) {
-        return beanProperties(paramType) != null;
+        return beanConstructor(paramType) != null;
     }
 
     public static String[] beanProperties(Class<?> paramType) {
@@ -44,8 +45,8 @@ public class DaoUtils {
         return found;
     }
 
-    public static Class<?> rowClass(Method method) {
-        ResolvableType resolvableType = ResolvableType.forMethodReturnType(method);
+    public static Class<?> rowClass(Method method, Class<? extends Dao> daoClass) {
+        ResolvableType resolvableType = ResolvableType.forMethodReturnType(method, daoClass);
 
         if (resolvableType.hasGenerics()) {
             ResolvableType[] generics = resolvableType.getGenerics();
@@ -54,6 +55,30 @@ public class DaoUtils {
         }
 
         return resolvableType.resolve();
+    }
+
+    public static Class<?> beanClass(Method method, Class<? extends Dao> daoClass) {
+        if (method.getParameterCount() != 1) {
+            return null;
+        }
+
+        ResolvableType resolvableType = ResolvableType.forMethodParameter(method, 0, daoClass);
+
+        if (resolvableType.hasGenerics()) {
+            ResolvableType[] generics = resolvableType.getGenerics();
+            checkArgument(generics.length == 1);
+            return beanClass(generics[0].resolve());
+        }
+
+        return beanClass(resolvableType.resolve());
+    }
+
+    private static Class<?> beanClass(Class<?> potentialBeanClass) {
+        if (isBean(potentialBeanClass)) {
+            return potentialBeanClass;
+        }
+
+        return null;
     }
 
     public static boolean hasAnnotation(Method method, Class<? extends Annotation> annotationClass) {

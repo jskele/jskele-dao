@@ -7,11 +7,12 @@ import javax.sql.DataSource;
 
 import lombok.RequiredArgsConstructor;
 
-import org.jskele.libs.dao.impl.ConstructorRowMapper;
-import org.jskele.libs.dao.impl.ConvertingSingleColumnRowMapper;
-import org.jskele.libs.dao.impl.DaoSqlParameterSource;
+import org.jskele.libs.dao.Dao;
 import org.jskele.libs.dao.impl2.DaoUtils;
 import org.jskele.libs.dao.impl2.MethodDetails;
+import org.jskele.libs.dao.impl2.mappers.ConstructorRowMapper;
+import org.jskele.libs.dao.impl2.mappers.ConvertingSingleColumnRowMapper;
+import org.jskele.libs.dao.impl2.params.DaoSqlParameterSource;
 import org.jskele.libs.dao.impl2.params.ParameterExtractor;
 import org.jskele.libs.dao.impl2.sql.SqlSource;
 import org.springframework.core.convert.ConversionService;
@@ -28,11 +29,11 @@ public class DaoInvokerFactory {
     private final DataSource dataSource;
     private final ConversionService conversionService;
 
-    public DaoInvoker create(Method method) {
+    public DaoInvoker create(Method method, Class<? extends Dao> daoClass) {
         MethodDetails details = new MethodDetails(method);
 
-        ParameterExtractor extractor = ParameterExtractor.create(method);
-        SqlSource sqlSource = SqlSource.create(method, extractor);
+        ParameterExtractor extractor = ParameterExtractor.create(method, daoClass);
+        SqlSource sqlSource = SqlSource.create(daoClass, method, extractor);
 
         if (details.isUpdate()) {
             return args -> {
@@ -50,7 +51,7 @@ public class DaoInvokerFactory {
             };
         }
 
-        RowMapper<?> rowMapper = rowMapper(method);
+        RowMapper<?> rowMapper = rowMapper(method, daoClass);
 
         if (details.isQueryList()) {
             return args -> {
@@ -93,8 +94,8 @@ public class DaoInvokerFactory {
     }
 
 
-    private RowMapper<?> rowMapper(Method method) {
-        Class<?> rowClass = DaoUtils.rowClass(method);
+    private RowMapper<?> rowMapper(Method method, Class<? extends Dao> daoClass) {
+        Class<?> rowClass = DaoUtils.rowClass(method, daoClass);
 
         if (DaoUtils.isBean(rowClass)) {
             return new ConstructorRowMapper<>(rowClass, conversionService);

@@ -22,8 +22,7 @@ class BeanParameterExtractor implements ParameterExtractor {
     private final Method[] readMethods;
     private final Class<?>[] types;
 
-    static BeanParameterExtractor create(Method method) {
-        Class<?> beanClass = method.getParameterTypes()[0];
+    static BeanParameterExtractor create(Class<?> beanClass) {
         String[] names = DaoUtils.beanProperties(beanClass);
         Method[] readMethods = readMethods(beanClass, names);
 

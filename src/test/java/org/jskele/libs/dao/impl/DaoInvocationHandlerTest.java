@@ -55,18 +55,18 @@ public class DaoInvocationHandlerTest {
 		assertThat(actualRows, hasSize(2));
 	}
 
-	@Ignore
 	@Test
 	public void shouldBatchUpdate() {
 		// Given
-		TestTableRow row1 = createRow(1L, "batchUpdate1", 11);
+		TestTableRow row1 = createRow(1L, "row1", 11);
 		TestTableRow row2 = createRow(3L, "batchUpdate3", 33);
 
 		// When
-		dao.updateBatch(newArrayList(row1, row2));
-		List<TestTableRow> actualRows = dao.findByNumericColumnIn("excludedValue", newArrayList(1L, 3L));
+		int[] updatedCounts = dao.updateBatch(newArrayList(row1, row2));
+		List<TestTableRow> actualRows = dao.findByNumericColumnIn("excludedValue", newArrayList(11L, 33L));
 
 		// Then
+		assertThat(updatedCounts, equalTo(new int[]{1,1}));
 		assertThat(actualRows, hasSize(2));
 	}
 
