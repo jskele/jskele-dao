@@ -31,7 +31,7 @@ public class DaoInvokerFactory {
     public DaoInvoker create(Method method) {
         MethodDetails details = new MethodDetails(method);
 
-        ParameterExtractor extractor = details.parameterExtractor();
+        ParameterExtractor extractor = ParameterExtractor.create(method);
         SqlSource sqlSource = SqlSource.create(method, extractor);
 
         if (details.isUpdate()) {

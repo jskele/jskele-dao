@@ -1,6 +1,7 @@
 package org.jskele.libs.dao.impl2.sql;
 
 import static java.util.stream.Collectors.toMap;
+import static org.jskele.libs.dao.impl2.DaoUtils.hasAnnotation;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -100,6 +101,6 @@ class ClasspathSqlLoader {
     }
 
     public boolean isTemplated() {
-        return method.getAnnotation(SqlTemplate.class) != null;
+        return hasAnnotation(method, SqlTemplate.class);
     }
 }

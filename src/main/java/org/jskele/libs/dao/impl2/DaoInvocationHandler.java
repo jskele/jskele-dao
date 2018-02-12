@@ -1,24 +1,28 @@
 package org.jskele.libs.dao.impl2;
 
 import java.lang.reflect.Method;
+import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 
 import org.jskele.libs.dao.impl2.invokers.DaoInvoker;
 import org.jskele.libs.dao.impl2.invokers.DaoInvokerFactory;
 
+import com.google.common.collect.Maps;
 import com.google.common.reflect.AbstractInvocationHandler;
 
 @RequiredArgsConstructor
 class DaoInvocationHandler extends AbstractInvocationHandler {
 
     private final DaoInvokerFactory invokerFactory;
+    private final Map<Method, DaoInvoker> invokerMap = Maps.newHashMap();
 
     @Override
     protected Object handleInvocation(Object proxy, Method method, Object[] args) {
-        DaoInvoker invoker = invokerFactory.create(method);
-
-        // TODO: add cache (Meelis Lehtmets, 2018-02-08)
+        DaoInvoker invoker = invokerMap.computeIfAbsent(
+            method,
+            invokerFactory::create
+        );
 
         return invoker.invoke(args);
     }

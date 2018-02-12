@@ -1,11 +1,12 @@
 plugins {
-    id "io.spring.dependency-management" version "1.0.3.RELEASE"
+    id "io.spring.dependency-management" version "1.0.4.RELEASE"
+    id 'com.github.ben-manes.versions' version '0.17.0'
 }
 
 apply plugin: "java-library"
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.1'
+    gradleVersion = '4.5.1'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
@@ -25,7 +26,8 @@ repositories {
 
 dependencyManagement {
     imports {
-        mavenBom 'io.spring.platform:platform-bom:Brussels-SR4'
+        mavenBom 'io.spring.platform:platform-bom:Brussels-SR7'
+//        mavenBom 'org.springframework.boot:spring-boot-starter-parent:1.5.10.RELEASE'
     }
 }
 
@@ -45,7 +47,7 @@ dependencies {
             'com.github.jskele:lib-values:master-SNAPSHOT',
 
             'com.mitchellbosecke:pebble:2.4.0',
-            'org.reflections:reflections:0.9.10',
+            'org.reflections:reflections:0.9.11',
     )
 
     testCompileOnly(

@@ -1,6 +1,7 @@
 package org.jskele.libs.dao.impl2.sql;
 
 import static java.util.stream.Collectors.joining;
+import static org.jskele.libs.dao.impl2.DaoUtils.hasAnnotation;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -105,7 +106,7 @@ class SqlGenerator {
     }
 
     private String[] excludeNulls(String[] names, Object[] values) {
-        if (method.getAnnotation(ExcludeNulls.class) == null) {
+        if (hasAnnotation(method, ExcludeNulls.class)) {
             return names;
         }
 
@@ -126,7 +127,7 @@ class SqlGenerator {
 
     private String selectColumns() {
         Class<?> rowClass = DaoUtils.rowClass(method);
-        String[] columnNames = DaoUtils.constructorProperties(rowClass);
+        String[] columnNames = DaoUtils.beanProperties(rowClass);
 
         return Arrays.stream(columnNames)
             .map(this::convert)

@@ -28,7 +28,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.JdbcUtils;
 
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Throwables;
 import com.google.common.primitives.Primitives;
 
 @Slf4j
@@ -68,12 +67,8 @@ class ConstructorRowMapper<T> implements RowMapper<T> {
 
 		try {
 			return constructor.newInstance(arguments);
-		} catch (InstantiationException e) {
-			throw Throwables.propagate(e);
-		} catch (IllegalAccessException e) {
-			throw Throwables.propagate(e);
-		} catch (InvocationTargetException e) {
-			throw Throwables.propagate(e);
+		} catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+			throw new RuntimeException(e);
 		}
 	}
 

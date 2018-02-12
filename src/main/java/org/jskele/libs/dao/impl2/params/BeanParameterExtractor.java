@@ -18,13 +18,13 @@ import org.jskele.libs.dao.impl2.DaoUtils;
 
 @RequiredArgsConstructor
 class BeanParameterExtractor implements ParameterExtractor {
-    private final String[] parameterNames;
+    private final String[] names;
     private final Method[] readMethods;
     private final Class<?>[] types;
 
     static BeanParameterExtractor create(Method method) {
         Class<?> beanClass = method.getParameterTypes()[0];
-        String[] names = DaoUtils.constructorProperties(beanClass);
+        String[] names = DaoUtils.beanProperties(beanClass);
         Method[] readMethods = readMethods(beanClass, names);
 
         Class<?>[] types = Arrays.stream(readMethods)
@@ -34,9 +34,27 @@ class BeanParameterExtractor implements ParameterExtractor {
         return new BeanParameterExtractor(names, readMethods, types);
     }
 
+    private static Method[] readMethods(Class<?> beanClass, String[] properties) {
+        try {
+            BeanInfo beanInfo = Introspector.getBeanInfo(beanClass);
+
+            Map<String, Method> collect = Arrays.stream(beanInfo.getPropertyDescriptors())
+                .collect(toMap(
+                    FeatureDescriptor::getName,
+                    PropertyDescriptor::getReadMethod
+                ));
+
+            return Arrays.stream(properties)
+                .map(collect::get)
+                .toArray(Method[]::new);
+        } catch (IntrospectionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public String[] names() {
-        return parameterNames;
+        return names;
     }
 
     @Override
@@ -56,24 +74,6 @@ class BeanParameterExtractor implements ParameterExtractor {
         try {
             return readMethod.invoke(bean);
         } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static Method[] readMethods(Class<?> beanClass, String[] properties) {
-        try {
-            BeanInfo beanInfo = Introspector.getBeanInfo(beanClass);
-
-            Map<String, Method> collect = Arrays.stream(beanInfo.getPropertyDescriptors())
-                .collect(toMap(
-                    FeatureDescriptor::getName,
-                    PropertyDescriptor::getReadMethod
-                ));
-
-            return Arrays.stream(properties)
-                .map(collect::get)
-                .toArray(Method[]::new);
-        } catch (IntrospectionException e) {
             throw new RuntimeException(e);
         }
     }

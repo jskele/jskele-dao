@@ -11,7 +11,7 @@ import org.springframework.core.ParameterNameDiscoverer;
 class ArgumentsParameterExtractor implements ParameterExtractor {
     private static final ParameterNameDiscoverer PARAMETER_NAME_DISCOVERER = new DefaultParameterNameDiscoverer();
 
-    private final String[] parameterNames;
+    private final String[] names;
     private final Class<?>[] types;
 
     static ArgumentsParameterExtractor create(Method method) {
@@ -21,7 +21,7 @@ class ArgumentsParameterExtractor implements ParameterExtractor {
 
     @Override
     public String[] names() {
-        return parameterNames;
+        return names;
     }
 
     @Override
