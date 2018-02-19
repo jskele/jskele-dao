@@ -12,6 +12,9 @@ import com.google.common.reflect.Reflection;
 @RequiredArgsConstructor
 class DaoFactory {
 
+    static String BEAN_NAME = "daoFactory";
+    static String METHOD_NAME = "create";
+
     private final DaoInvokerFactory invokerFactory;
 
     public <T extends Dao> T create(Class<T> daoClass) {

@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.jskele.libs.dao.DaoAutoConfiguration
+org.jskele.libs.dao.impl.DaoAutoConfiguration

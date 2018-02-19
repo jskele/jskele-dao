@@ -1,9 +1,10 @@
-package org.jskele.libs.dao;
+package org.jskele.libs.dao.impl;
 
 import java.beans.Introspector;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jskele.libs.dao.Dao;
 import org.reflections.Reflections;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanDefinition;
