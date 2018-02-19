@@ -1,9 +1,9 @@
-package org.jskele.libs.dao.impl2.params;
+package org.jskele.libs.dao.impl.params;
 
 import java.lang.reflect.Method;
 
 import org.jskele.libs.dao.Dao;
-import org.jskele.libs.dao.impl2.DaoUtils;
+import org.jskele.libs.dao.impl.DaoUtils;
 
 public interface ParameterExtractor {
 

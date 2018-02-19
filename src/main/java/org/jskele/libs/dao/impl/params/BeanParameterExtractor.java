@@ -1,4 +1,4 @@
-package org.jskele.libs.dao.impl2.params;
+package org.jskele.libs.dao.impl.params;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -14,7 +14,7 @@ import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 
-import org.jskele.libs.dao.impl2.DaoUtils;
+import org.jskele.libs.dao.impl.DaoUtils;
 
 @RequiredArgsConstructor
 class BeanParameterExtractor implements ParameterExtractor {

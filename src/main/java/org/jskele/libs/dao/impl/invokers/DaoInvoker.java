@@ -1,4 +1,4 @@
-package org.jskele.libs.dao.impl2.invokers;
+package org.jskele.libs.dao.impl.invokers;
 
 public interface DaoInvoker {
 

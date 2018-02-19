@@ -1,4 +1,4 @@
-package org.jskele.libs.dao.impl2;
+package org.jskele.libs.dao.impl;
 
 import static com.google.common.base.Preconditions.checkArgument;
 

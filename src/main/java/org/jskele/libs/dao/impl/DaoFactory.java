@@ -1,9 +1,9 @@
-package org.jskele.libs.dao.impl2;
+package org.jskele.libs.dao.impl;
 
 import lombok.RequiredArgsConstructor;
 
 import org.jskele.libs.dao.Dao;
-import org.jskele.libs.dao.impl2.invokers.DaoInvokerFactory;
+import org.jskele.libs.dao.impl.invokers.DaoInvokerFactory;
 import org.springframework.stereotype.Component;
 
 import com.google.common.reflect.Reflection;

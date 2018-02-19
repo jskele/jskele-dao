@@ -1,4 +1,4 @@
-package org.jskele.libs.dao.impl2;
+package org.jskele.libs.dao.impl;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -6,8 +6,8 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 
 import org.jskele.libs.dao.Dao;
-import org.jskele.libs.dao.impl2.invokers.DaoInvoker;
-import org.jskele.libs.dao.impl2.invokers.DaoInvokerFactory;
+import org.jskele.libs.dao.impl.invokers.DaoInvoker;
+import org.jskele.libs.dao.impl.invokers.DaoInvokerFactory;
 
 import com.google.common.collect.Maps;
 import com.google.common.reflect.AbstractInvocationHandler;

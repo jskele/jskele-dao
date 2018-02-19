@@ -1,4 +1,4 @@
-package org.jskele.libs.dao.impl2;
+package org.jskele.libs.dao.impl;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

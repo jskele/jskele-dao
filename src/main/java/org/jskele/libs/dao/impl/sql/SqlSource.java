@@ -1,12 +1,12 @@
-package org.jskele.libs.dao.impl2.sql;
+package org.jskele.libs.dao.impl.sql;
 
-import static org.jskele.libs.dao.impl2.DaoUtils.hasAnnotation;
+import static org.jskele.libs.dao.impl.DaoUtils.hasAnnotation;
 
 import java.lang.reflect.Method;
 
 import org.jskele.libs.dao.Dao;
 import org.jskele.libs.dao.GenerateSql;
-import org.jskele.libs.dao.impl2.params.ParameterExtractor;
+import org.jskele.libs.dao.impl.params.ParameterExtractor;
 
 public interface SqlSource {
 

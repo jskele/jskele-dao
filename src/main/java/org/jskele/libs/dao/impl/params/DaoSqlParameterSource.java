@@ -1,4 +1,4 @@
-package org.jskele.libs.dao.impl2.params;
+package org.jskele.libs.dao.impl.params;
 
 import java.sql.Connection;
 import java.sql.Date;

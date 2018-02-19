@@ -1,7 +1,7 @@
-package org.jskele.libs.dao.impl2.sql;
+package org.jskele.libs.dao.impl.sql;
 
 import static java.util.stream.Collectors.toMap;
-import static org.jskele.libs.dao.impl2.DaoUtils.hasAnnotation;
+import static org.jskele.libs.dao.impl.DaoUtils.hasAnnotation;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -15,7 +15,7 @@ import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 
 import org.jskele.libs.dao.SqlTemplate;
-import org.jskele.libs.dao.impl2.params.ParameterExtractor;
+import org.jskele.libs.dao.impl.params.ParameterExtractor;
 
 import com.google.common.io.Resources;
 import com.google.common.reflect.Reflection;

@@ -1,4 +1,4 @@
-package org.jskele.libs.dao.impl2.invokers;
+package org.jskele.libs.dao.impl.invokers;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -8,13 +8,13 @@ import javax.sql.DataSource;
 import lombok.RequiredArgsConstructor;
 
 import org.jskele.libs.dao.Dao;
-import org.jskele.libs.dao.impl2.DaoUtils;
-import org.jskele.libs.dao.impl2.MethodDetails;
-import org.jskele.libs.dao.impl2.mappers.ConstructorRowMapper;
-import org.jskele.libs.dao.impl2.mappers.ConvertingSingleColumnRowMapper;
-import org.jskele.libs.dao.impl2.params.DaoSqlParameterSource;
-import org.jskele.libs.dao.impl2.params.ParameterExtractor;
-import org.jskele.libs.dao.impl2.sql.SqlSource;
+import org.jskele.libs.dao.impl.DaoUtils;
+import org.jskele.libs.dao.impl.MethodDetails;
+import org.jskele.libs.dao.impl.mappers.ConstructorRowMapper;
+import org.jskele.libs.dao.impl.mappers.ConvertingSingleColumnRowMapper;
+import org.jskele.libs.dao.impl.params.DaoSqlParameterSource;
+import org.jskele.libs.dao.impl.params.ParameterExtractor;
+import org.jskele.libs.dao.impl.sql.SqlSource;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;

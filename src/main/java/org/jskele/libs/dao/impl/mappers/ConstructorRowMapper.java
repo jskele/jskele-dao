@@ -1,4 +1,4 @@
-package org.jskele.libs.dao.impl2.mappers;
+package org.jskele.libs.dao.impl.mappers;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;

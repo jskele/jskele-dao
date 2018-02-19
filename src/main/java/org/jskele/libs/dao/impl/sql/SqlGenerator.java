@@ -1,7 +1,7 @@
-package org.jskele.libs.dao.impl2.sql;
+package org.jskele.libs.dao.impl.sql;
 
 import static java.util.stream.Collectors.joining;
-import static org.jskele.libs.dao.impl2.DaoUtils.hasAnnotation;
+import static org.jskele.libs.dao.impl.DaoUtils.hasAnnotation;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -12,8 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.jskele.libs.dao.Dao;
 import org.jskele.libs.dao.ExcludeNulls;
-import org.jskele.libs.dao.impl2.DaoUtils;
-import org.jskele.libs.dao.impl2.params.ParameterExtractor;
+import org.jskele.libs.dao.impl.DaoUtils;
+import org.jskele.libs.dao.impl.params.ParameterExtractor;
 import org.jskele.libs.values.LongValue;
 
 import com.google.common.base.CaseFormat;
