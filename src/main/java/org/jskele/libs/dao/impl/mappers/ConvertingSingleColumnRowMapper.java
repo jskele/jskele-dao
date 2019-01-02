@@ -1,4 +1,4 @@
-package org.jskele.libs.dao.impl;
+package org.jskele.libs.dao.impl.mappers;
 
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.SingleColumnRowMapper;

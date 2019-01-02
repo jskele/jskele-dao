@@ -11,10 +11,10 @@ public interface TestTableDao extends CrudDao<TestTableRow, TestTableRowId> {
 	List<TestTableRow> selectAll();
 
 	@GenerateSql
-	void insertBatch(List<TestTableRow> rows);
+	int[] insertBatch(List<TestTableRow> rows);
 
 	@GenerateSql
-	void updateBatch(List<TestTableRow> rows);
+	int[] updateBatch(List<TestTableRow> rows);
 
 	List<TestTableRow> findByNumericColumnIn(String excludedValue, List<Long> numericColumns);
 }

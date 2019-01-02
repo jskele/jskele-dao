@@ -1,6 +1,5 @@
-package org.jskele.libs.dao.impl;
+package org.jskele.libs.dao.impl.params;
 
-import java.beans.PropertyDescriptor;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.SQLException;
@@ -16,50 +15,12 @@ import lombok.RequiredArgsConstructor;
 import org.jskele.libs.values.LongValue;
 import org.jskele.libs.values.StringValue;
 import org.jskele.libs.values.ValueClass;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-
-import com.google.common.base.Preconditions;
 
 @RequiredArgsConstructor
 public class DaoSqlParameterSource extends MapSqlParameterSource {
 
 	private final DataSource dataSource;
-
-	public DaoSqlParameterSource() {
-		this(null);
-	}
-
-	public DaoSqlParameterSource(DataSource dataSource, Object bean) {
-		this(dataSource);
-		BeanWrapper beanWrapper = PropertyAccessorFactory.forBeanPropertyAccess(bean);
-		PropertyDescriptor[] props = beanWrapper.getPropertyDescriptors();
-		for (PropertyDescriptor prop : props) {
-			String name = prop.getName();
-			if (beanWrapper.isReadableProperty(name)) {
-				addValue(name, beanWrapper.getPropertyValue(name));
-			}
-		}
-	}
-
-	public DaoSqlParameterSource(DataSource dataSource, String[] parameterNames, Object[] args) {
-		this(dataSource);
-		Preconditions.checkState(parameterNames.length == args.length,
-				"Number of method parameters (%s) doesn't match number of arguments (%s)", parameterNames.length, args.length);
-
-		for (int i = 0; i < args.length; i++) {
-			String name = parameterNames[i];
-			Object value = args[i];
-
-			addValue(name, value);
-		}
-	}
-
-	public DaoSqlParameterSource(DataSource dataSource, String paramName, Object value) {
-		this(dataSource);
-		addValue(paramName, value);
-	}
 
 	@Override
 	public Object getValue(String paramName) throws IllegalArgumentException {
