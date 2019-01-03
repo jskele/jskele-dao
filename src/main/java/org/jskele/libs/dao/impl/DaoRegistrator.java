@@ -1,58 +1,62 @@
 package org.jskele.libs.dao.impl;
 
-import java.beans.Introspector;
-
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import lombok.RequiredArgsConstructor;
 import org.jskele.libs.dao.Dao;
 import org.reflections.Reflections;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
-import org.springframework.beans.factory.support.GenericBeanDefinition;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.stereotype.Component;
 
-@Slf4j
+import javax.annotation.PostConstruct;
+import java.beans.Introspector;
+import java.util.List;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.apache.commons.lang3.StringUtils.substringBeforeLast;
+
 @Component
-public class DaoRegistrator implements BeanDefinitionRegistryPostProcessor {
+@RequiredArgsConstructor
+public class DaoRegistrator implements BeanFactoryAware {
 
-	@Override
-	public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
+    @Value("${jskele.dao.packages:}")
+    private String[] packages;
+    private BeanFactory beanFactory;
+    private final DaoFactory daoFactory;
 
-		String appPackage = basePackage(registry);
+    @PostConstruct
+    public void init() {
+        List<String> basePackages = basePackages();
 
-		new Reflections(appPackage)
-				.getSubTypesOf(Dao.class)
-				.forEach(daoClass -> registry.registerBeanDefinition(
-						beanName(daoClass),
-						beanDefinition(daoClass)));
-	}
+        ConfigurableBeanFactory configurableBeanFactory = (ConfigurableBeanFactory) beanFactory;
 
-	private String basePackage(BeanDefinitionRegistry registry) {
-		// TODO: base package from property, fallback to application bean
-		BeanDefinition appDef = registry.getBeanDefinition("application");
-		return StringUtils.substringBeforeLast(appDef.getBeanClassName(), ".");
-	}
+        basePackages.forEach(appPackage -> new Reflections(appPackage)
+                .getTypesAnnotatedWith(Dao.class)
+                .forEach(daoClass ->
+                        configurableBeanFactory.registerSingleton(
+                                beanName(daoClass),
+                                daoFactory.create(daoClass)))
+        );
+    }
 
-	private String beanName(Class<? extends Dao> daoClass) {
-		return Introspector.decapitalize(daoClass.getSimpleName());
-	}
+    private List<String> basePackages() {
+        if (packages == null || packages.length == 0) {
+            Object applicationBean = beanFactory.getBean("application");
+            return singletonList(substringBeforeLast(applicationBean.getClass().getName(), "."));
+        }
 
-	private BeanDefinition beanDefinition(Class<? extends Dao> daoClass) {
-		BeanDefinition bd = new GenericBeanDefinition();
+        return asList(packages);
+    }
 
-		bd.setFactoryBeanName(DaoFactory.BEAN_NAME);
-		bd.setFactoryMethodName(DaoFactory.METHOD_NAME);
-		bd.getConstructorArgumentValues().addIndexedArgumentValue(0, daoClass);
+    private String beanName(Class<?> daoClass) {
+        return Introspector.decapitalize(daoClass.getSimpleName());
+    }
 
-		return bd;
-	}
-
-	@Override
-	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-		// not used
-	}
-
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        this.beanFactory = beanFactory;
+    }
 }
