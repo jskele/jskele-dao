@@ -1,13 +1,12 @@
 package org.jskele.libs.dao.impl.params;
 
-import java.lang.reflect.Method;
-
-import org.jskele.libs.dao.Dao;
 import org.jskele.libs.dao.impl.DaoUtils;
+
+import java.lang.reflect.Method;
 
 public interface ParameterExtractor {
 
-    static ParameterExtractor create(Method method, Class<? extends Dao> daoClass) {
+    static ParameterExtractor create(Method method, Class<?> daoClass) {
         Class<?> beanClass = DaoUtils.beanClass(method, daoClass);
         if (beanClass != null) {
             return BeanParameterExtractor.create(beanClass);

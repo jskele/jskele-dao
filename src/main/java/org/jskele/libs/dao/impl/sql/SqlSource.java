@@ -1,16 +1,15 @@
 package org.jskele.libs.dao.impl.sql;
 
-import static org.jskele.libs.dao.impl.DaoUtils.hasAnnotation;
-
-import java.lang.reflect.Method;
-
-import org.jskele.libs.dao.Dao;
 import org.jskele.libs.dao.GenerateSql;
 import org.jskele.libs.dao.impl.params.ParameterExtractor;
 
+import java.lang.reflect.Method;
+
+import static org.jskele.libs.dao.impl.DaoUtils.hasAnnotation;
+
 public interface SqlSource {
 
-    static SqlSource create(Class<? extends Dao> daoClass, Method method, ParameterExtractor extractor) {
+    static SqlSource create(Class<?> daoClass, Method method, ParameterExtractor extractor) {
         if (hasAnnotation(method, GenerateSql.class)) {
             return new SqlGenerator(daoClass, method, extractor).createSource();
         }

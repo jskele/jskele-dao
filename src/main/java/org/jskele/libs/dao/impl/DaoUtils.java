@@ -1,14 +1,13 @@
 package org.jskele.libs.dao.impl;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import org.springframework.core.ResolvableType;
 
 import java.beans.ConstructorProperties;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
-import org.jskele.libs.dao.Dao;
-import org.springframework.core.ResolvableType;
+import static com.google.common.base.Preconditions.checkArgument;
 
 public class DaoUtils {
     public static boolean isBean(Class<?> paramType) {
@@ -45,7 +44,7 @@ public class DaoUtils {
         return found;
     }
 
-    public static Class<?> rowClass(Method method, Class<? extends Dao> daoClass) {
+    public static Class<?> rowClass(Method method, Class<?> daoClass) {
         ResolvableType resolvableType = ResolvableType.forMethodReturnType(method, daoClass);
 
         if (resolvableType.hasGenerics()) {
@@ -57,7 +56,7 @@ public class DaoUtils {
         return resolvableType.resolve();
     }
 
-    public static Class<?> beanClass(Method method, Class<? extends Dao> daoClass) {
+    public static Class<?> beanClass(Method method, Class<?> daoClass) {
         if (method.getParameterCount() != 1) {
             return null;
         }

@@ -1,29 +1,26 @@
 package org.jskele.libs.dao.impl.sql;
 
-import static java.util.stream.Collectors.joining;
-import static org.jskele.libs.dao.impl.DaoUtils.hasAnnotation;
-
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.stream.IntStream;
-
+import com.google.common.base.CaseFormat;
+import com.google.common.base.Converter;
 import lombok.RequiredArgsConstructor;
-
 import org.apache.commons.lang3.StringUtils;
-import org.jskele.libs.dao.Dao;
 import org.jskele.libs.dao.ExcludeNulls;
 import org.jskele.libs.dao.impl.DaoUtils;
 import org.jskele.libs.dao.impl.params.ParameterExtractor;
 import org.jskele.libs.values.LongValue;
 
-import com.google.common.base.CaseFormat;
-import com.google.common.base.Converter;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.stream.IntStream;
+
+import static java.util.stream.Collectors.joining;
+import static org.jskele.libs.dao.impl.DaoUtils.hasAnnotation;
 
 @RequiredArgsConstructor
 class SqlGenerator {
     private static final Converter<String, String> CONVERTER = CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
 
-    private final Class<? extends Dao> daoClass;
+    private final Class<?> daoClass;
     private final Method method;
     private final ParameterExtractor extractor;
 
@@ -90,18 +87,18 @@ class SqlGenerator {
     private String insertValues() {
         String[] paramNames = extractor.names();
         return Arrays.stream(paramNames)
-            .filter(this::notGeneratedColumn)
-            .map(name -> ":" + name)
-            .collect(joining(", "));
+                .filter(this::notGeneratedColumn)
+                .map(name -> ":" + name)
+                .collect(joining(", "));
     }
 
     private String updateColumns(Object[] args) {
         String[] paramNames = updateParamNames(args);
 
         return Arrays.stream(paramNames)
-            .filter(name -> !name.equals("id"))
-            .map(this::columnEqualsParameter)
-            .collect(joining(", "));
+                .filter(name -> !name.equals("id"))
+                .map(this::columnEqualsParameter)
+                .collect(joining(", "));
     }
 
     private String[] updateParamNames(Object[] args) {
@@ -113,18 +110,18 @@ class SqlGenerator {
         Object[] values = extractor.values(args);
 
         return IntStream.range(0, names.length)
-            .filter(i -> values[i] != null)
-            .mapToObj(i -> names[i])
-            .toArray(String[]::new);
+                .filter(i -> values[i] != null)
+                .mapToObj(i -> names[i])
+                .toArray(String[]::new);
     }
 
     private String insertColumns() {
         String[] paramNames = extractor.names();
         return Arrays.stream(paramNames)
-            .filter(this::notGeneratedColumn)
-            .map(this::convert)
-            .map(this::esc)
-            .collect(joining(", "));
+                .filter(this::notGeneratedColumn)
+                .map(this::convert)
+                .map(this::esc)
+                .collect(joining(", "));
     }
 
     private String selectColumns() {
@@ -132,9 +129,9 @@ class SqlGenerator {
         String[] columnNames = DaoUtils.beanProperties(rowClass);
 
         return Arrays.stream(columnNames)
-            .map(this::convert)
-            .map(this::esc)
-            .collect(joining(", "));
+                .map(this::convert)
+                .map(this::esc)
+                .collect(joining(", "));
     }
 
     private String convert(String s) {
@@ -153,8 +150,8 @@ class SqlGenerator {
         }
 
         String predicates = Arrays.stream(paramNames)
-            .map(this::columnEqualsParameter)
-            .collect(joining(" AND "));
+                .map(this::columnEqualsParameter)
+                .collect(joining(" AND "));
 
         return " WHERE " + predicates;
     }

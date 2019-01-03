@@ -1,13 +1,6 @@
 package org.jskele.libs.dao.impl.invokers;
 
-import java.lang.reflect.Method;
-import java.util.Collection;
-
-import javax.sql.DataSource;
-
 import lombok.RequiredArgsConstructor;
-
-import org.jskele.libs.dao.Dao;
 import org.jskele.libs.dao.impl.DaoUtils;
 import org.jskele.libs.dao.impl.MethodDetails;
 import org.jskele.libs.dao.impl.mappers.ConstructorRowMapper;
@@ -21,6 +14,10 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Component;
 
+import javax.sql.DataSource;
+import java.lang.reflect.Method;
+import java.util.Collection;
+
 @Component
 @RequiredArgsConstructor
 public class DaoInvokerFactory {
@@ -29,7 +26,7 @@ public class DaoInvokerFactory {
     private final DataSource dataSource;
     private final ConversionService conversionService;
 
-    public DaoInvoker create(Method method, Class<? extends Dao> daoClass) {
+    public DaoInvoker create(Method method, Class<?> daoClass) {
         MethodDetails details = new MethodDetails(method);
 
         ParameterExtractor extractor = ParameterExtractor.create(method, daoClass);
@@ -73,8 +70,8 @@ public class DaoInvokerFactory {
         Collection<?> collection = (Collection<?>) args[0];
 
         return collection.stream()
-            .map(arg -> parameterSource(extractor, new Object[] { arg }))
-            .toArray(SqlParameterSource[]::new);
+                .map(arg -> parameterSource(extractor, new Object[]{arg}))
+                .toArray(SqlParameterSource[]::new);
     }
 
     private SqlParameterSource parameterSource(ParameterExtractor extractor, Object[] args) {
@@ -94,7 +91,7 @@ public class DaoInvokerFactory {
     }
 
 
-    private RowMapper<?> rowMapper(Method method, Class<? extends Dao> daoClass) {
+    private RowMapper<?> rowMapper(Method method, Class<?> daoClass) {
         Class<?> rowClass = DaoUtils.rowClass(method, daoClass);
 
         if (DaoUtils.isBean(rowClass)) {

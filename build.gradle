@@ -1,6 +1,9 @@
 plugins {
-    id "io.spring.dependency-management" version "1.0.4.RELEASE"
-    id 'com.github.ben-manes.versions' version '0.17.0'
+    id "io.spring.dependency-management" version "1.0.6.RELEASE"
+}
+
+ext {
+    springBootVersion = '2.0.1.RELEASE'
 }
 
 apply plugin: "java-library"
@@ -30,7 +33,7 @@ repositories {
 
 dependencyManagement {
     imports {
-        mavenBom 'io.spring.platform:platform-bom:Brussels-SR7'
+        mavenBom "org.springframework.boot:spring-boot-starter-parent:${springBootVersion}"
     }
 }
 
@@ -44,7 +47,7 @@ dependencies {
             'org.springframework:spring-core',
             'org.springframework:spring-jdbc',
             'org.springframework:spring-context',
-            'commons-beanutils:commons-beanutils',
+            'commons-beanutils:commons-beanutils:1.9.3',
             'org.apache.commons:commons-lang3',
 
             'com.github.jskele:lib-values:master-SNAPSHOT',
