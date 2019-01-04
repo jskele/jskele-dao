@@ -1,7 +1,7 @@
 # lib-dao
 
  
-###Configuration
+### Configuration
  
  
 **By default** application bean base package is used to scan for Dao classes. 
@@ -17,7 +17,7 @@ It is possible to specify database schema. It is applied to current and child in
 @Dao(schema="myDatabaseSchema")
 ```
 
-###Supported generated SQL statements
+### Supported generated SQL statements
 
 The following prefixes can be used in method naming, in conjunction with `@GenerateSql` annotation.
 
@@ -29,7 +29,7 @@ The following prefixes can be used in method naming, in conjunction with `@Gener
 * selectForUpdate
 
 
-###Examples
+### Examples
 
 ```
 @GenerateSql
