@@ -4,10 +4,12 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Converter;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.jskele.libs.dao.Dao;
 import org.jskele.libs.dao.ExcludeNulls;
 import org.jskele.libs.dao.impl.DaoUtils;
 import org.jskele.libs.dao.impl.params.ParameterExtractor;
 import org.jskele.libs.values.LongValue;
+import org.springframework.core.annotation.AnnotationUtils;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -178,7 +180,12 @@ class SqlGenerator {
         String camelTableName = StringUtils.removeEnd(daoName, "Dao");
 
         String tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, camelTableName);
-        return esc(tableName);
+
+        Dao annotation = AnnotationUtils.findAnnotation(daoClass, Dao.class);
+        String schema = annotation.schema();
+
+        String prefix = StringUtils.isBlank(schema) ? "" : esc(schema) + ".";
+        return prefix + esc(tableName);
     }
 
     private boolean hasPrefix(String prefix) {
