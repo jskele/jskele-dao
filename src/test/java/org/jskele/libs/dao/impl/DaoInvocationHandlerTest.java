@@ -8,10 +8,19 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -20,7 +29,13 @@ import static org.hamcrest.Matchers.*;
 public class DaoInvocationHandlerTest {
 
     @Autowired
+    private PlatformTransactionManager transactionManager;
+
+    @Autowired
     private TestTableDao dao;
+
+    private Lock lock = new ReentrantLock();
+    private ExecutorService executorService = newFixedThreadPool(2);
 
     @Test
     public void shouldInsertRow() {
@@ -111,6 +126,63 @@ public class DaoInvocationHandlerTest {
 
         // Then
         assertThat(result, hasSize(greaterThan(0)));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void shouldSelectForUpdate() {
+        // Given
+        ConcurrentLinkedQueue<Integer> executionOrder = new ConcurrentLinkedQueue<>();
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+
+        TestTableRow row = TestTableRow.builder()
+                .stringColumn("value")
+                .numericColumn(99)
+                .build();
+
+        TestTableRowId insertedId = dao.insert(row);
+
+        Callable<Void> firstUpdate = callable(1, insertedId, transactionTemplate, executionOrder);
+        Callable<Void> secondUpdate = callable(2, insertedId, transactionTemplate, executionOrder);
+
+        // When
+        try {
+            executorService.invokeAll(newArrayList(firstUpdate, secondUpdate));
+        } catch (InterruptedException ignored) {
+        }
+
+        // Then
+        TestTableRow actual = dao.select(insertedId);
+        assertThat(actual.getNumericColumn(), not(equalTo(executionOrder.poll())));
+        assertThat(actual.getNumericColumn(), equalTo(executionOrder.poll()));
+    }
+
+    private Callable<Void> callable(int id, TestTableRowId insertedId, TransactionTemplate transactionTemplate, ConcurrentLinkedQueue<Integer> queue) {
+        return () -> transactionTemplate.execute(status -> {
+            TestTableRow row;
+            try {
+                lock.lock();
+                queue.add(id);
+                row = dao.selectForUpdate(insertedId);
+            } finally {
+                lock.unlock();
+            }
+
+            try {
+                // delay first thread update
+                TimeUnit.MILLISECONDS.sleep(queue.peek() == id ? 100 : 0);
+            } catch (InterruptedException ignored) {
+            }
+
+            TestTableRow updatedRow = TestTableRow.builder()
+                    .id(row.getId())
+                    .stringColumn(row.getStringColumn())
+                    .numericColumn(id)
+                    .build();
+
+            dao.update(updatedRow);
+            return null;
+        });
     }
 
     private TestTableRow createRow(Long id, String value, int numeric) {

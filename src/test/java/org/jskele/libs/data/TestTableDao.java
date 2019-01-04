@@ -16,5 +16,8 @@ public interface TestTableDao extends CrudDao<TestTableRow, TestTableRowId> {
     @GenerateSql
     int[] updateBatch(List<TestTableRow> rows);
 
+    @GenerateSql
+    TestTableRow selectForUpdate(TestTableRowId id);
+
     List<TestTableRow> findByNumericColumnIn(String excludedValue, List<Long> numericColumns);
 }

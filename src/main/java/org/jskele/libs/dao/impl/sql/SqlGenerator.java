@@ -45,6 +45,10 @@ class SqlGenerator {
             return staticSqlSource(generateCount());
         }
 
+        if (hasPrefix("selectForUpdate")) {
+            return staticSqlSource(generateSelectForUpdate());
+        }
+
         return staticSqlSource(generateSelect());
     }
 
@@ -82,6 +86,10 @@ class SqlGenerator {
 
     private String generateSelect() {
         return "SELECT " + selectColumns() + " FROM " + tableName() + whereCondition();
+    }
+
+    private String generateSelectForUpdate() {
+        return generateSelect() + " FOR UPDATE";
     }
 
     private String insertValues() {
