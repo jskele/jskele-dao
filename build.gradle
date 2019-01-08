@@ -30,9 +30,6 @@ artifacts {
 repositories {
     mavenCentral()
     jcenter()
-    maven {
-        url "https://dl.bintray.com/raidotyrk/jskele"
-    }
 }
 
 dependencyManagement {
@@ -106,7 +103,7 @@ publishing {
             artifact sourcesJar {
                 classifier "sources"
             }
-            groupId = 'org.jskele'
+            groupId = 'org.jskele.libs.dao'
             artifactId = 'lib-dao'
             version = '1.0'
         }
