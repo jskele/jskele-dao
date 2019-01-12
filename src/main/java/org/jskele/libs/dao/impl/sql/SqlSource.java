@@ -9,9 +9,9 @@ import static org.jskele.libs.dao.impl.DaoUtils.hasAnnotation;
 
 public interface SqlSource {
 
-    static SqlSource create(Class<?> daoClass, Method method, ParameterExtractor extractor) {
+    static SqlSource create(Class<?> daoClass, Method method, ParameterExtractor extractor, boolean isBatchInsertOrUpdate) {
         if (hasAnnotation(method, GenerateSql.class)) {
-            return new SqlGenerator(daoClass, method, extractor).createSource();
+            return new SqlGenerator(daoClass, method, extractor).createSource(isBatchInsertOrUpdate);
         }
 
         return new ClasspathSqlLoader(method, extractor).createSource();

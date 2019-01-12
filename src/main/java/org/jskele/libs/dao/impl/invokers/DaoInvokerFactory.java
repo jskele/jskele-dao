@@ -35,7 +35,8 @@ public class DaoInvokerFactory {
                 "Parameter names for generating SQL base based on %s can't be resolved. Try adding compiler arguments `-parameters`",
                 method);
 
-        SqlSource sqlSource = SqlSource.create(daoClass, method, extractor);
+        boolean isBatchInsertOrUpdate = details.isBatchUpdate();
+        SqlSource sqlSource = SqlSource.create(daoClass, method, extractor, isBatchInsertOrUpdate);
 
         if (details.isUpdate()) {
             return args -> {
@@ -45,7 +46,7 @@ public class DaoInvokerFactory {
             };
         }
 
-        if (details.isBatchUpdate()) {
+        if (isBatchInsertOrUpdate) {
             return args -> {
                 SqlParameterSource[] paramsArray = parameterSourceArray(extractor, args);
                 String sql = sqlSource.generateSql(args);
