@@ -7,11 +7,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -34,6 +36,9 @@ public class DaoInvocationHandlerTest {
     @Autowired
     private TestTableDao dao;
 
+    @Autowired
+    private NamedParameterJdbcTemplate jdbcTemplate;
+
     private Lock lock = new ReentrantLock();
     private ExecutorService executorService = newFixedThreadPool(2);
 
@@ -46,11 +51,14 @@ public class DaoInvocationHandlerTest {
                 .build();
 
         // When
+        Long expectedGeneratedIdValue = 1 + getCurrentSeqValue();
         TestTableRowId insertedId = dao.insert(row);
         TestTableRow actual = dao.select(insertedId);
 
         // Then
-        assertThat(insertedId.toValue(), equalTo(4L));
+        assertThat(insertedId.toValue(), equalTo(expectedGeneratedIdValue));
+
+        assertThat(actual.getId().toValue(), equalTo(expectedGeneratedIdValue));
         assertThat(actual.getNumericColumn(), equalTo(99));
         assertThat(actual.getStringColumn(), equalTo("value"));
     }
@@ -58,12 +66,12 @@ public class DaoInvocationHandlerTest {
     @Test
     public void shouldInsertBatch() {
         // Given
-        TestTableRow row1 = createRow(8L, "batch1", 8);
-        TestTableRow row2 = createRow(9L, "batch2", 9);
+        TestTableRow row1 = createRow(101L, "batch1", 8);
+        TestTableRow row2 = createRow(102L, "batch2", 9);
 
         // When
         dao.insertBatch(newArrayList(row1, row2));
-        List<TestTableRow> actualRows = dao.findByNumericColumnIn("excludedValue", newArrayList(8L, 9L));
+        List<TestTableRow> actualRows = dao.findByNumericColumnIn("excludedValue", newArrayList(row1.getNumericColumn().longValue(), row2.getNumericColumn().longValue()));
 
         // Then
         assertThat(actualRows, hasSize(2));
@@ -191,4 +199,9 @@ public class DaoInvocationHandlerTest {
                 .numericColumn(numeric)
                 .build();
     }
+
+    private Long getCurrentSeqValue() {
+        return jdbcTemplate.queryForObject("SELECT currval('test_table_id_seq'::regclass)", (Map<String, ?>) null, Long.class);
+    }
+
 }
