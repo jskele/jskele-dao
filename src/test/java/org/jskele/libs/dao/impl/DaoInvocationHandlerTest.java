@@ -129,7 +129,6 @@ public class DaoInvocationHandlerTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void shouldSelectForUpdate() {
         // Given
         ConcurrentLinkedQueue<Integer> executionOrder = new ConcurrentLinkedQueue<>();

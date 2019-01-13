@@ -1,11 +1,10 @@
 package org.jskele.libs.dao.impl.params;
 
-import java.lang.reflect.Method;
-
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
+
+import java.lang.reflect.Method;
 
 @RequiredArgsConstructor
 class ArgumentsParameterExtractor implements ParameterExtractor {
