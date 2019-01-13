@@ -94,7 +94,8 @@ class SqlGenerator {
     }
 
     private String insertReturning() {
-        if (isNumericId()) {
+        Class<?> idClass = getTypeOf("id");
+        if (idClass != null && (isNumericId(idClass) || method.getReturnType().isAssignableFrom(idClass))) {
             return " RETURNING id";
         }
 
@@ -234,20 +235,23 @@ class SqlGenerator {
         return method.getName().startsWith(prefix);
     }
 
-    private boolean isNumericId() {
-        int idIndex = Arrays.asList(extractor.names()).indexOf("id");
-
-        if (idIndex == -1) {
-            return false;
-        }
-
-        Class<?> idClass = extractor.types()[idIndex];
-
+    private boolean isNumericId(Class<?> idClass) {
         if (LongValue.class.isAssignableFrom(idClass)) {
             return true;
         }
 
         return Number.class.isAssignableFrom(idClass);
     }
+
+    private Class<?> getTypeOf(String paramName) {
+        int idIndex = Arrays.asList(extractor.names()).indexOf(paramName);
+
+        if (idIndex == -1) {
+            return null;
+        }
+
+        return extractor.types()[idIndex];
+    }
+
 
 }

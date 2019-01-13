@@ -3,3 +3,9 @@ CREATE TABLE test_table (
   string_column  TEXT,
   numeric_column INTEGER
 );
+
+CREATE TABLE test_table_with_uuid_id (
+  id             UUID PRIMARY KEY,
+  string_column  TEXT,
+  numeric_column INTEGER
+);
