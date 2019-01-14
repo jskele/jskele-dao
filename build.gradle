@@ -1,8 +1,21 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'com.cinnober.gradle', name: 'semver-git', version: '2.2.0'
+    }
+}
+
 plugins {
     id "io.spring.dependency-management" version "1.0.6.RELEASE"
     id "com.jfrog.bintray" version "1.8.4"
     id 'maven-publish'
 }
+
+apply plugin: 'com.cinnober.gradle.semver-git' // derive gradle project version based on git tag
+
+group 'org.jskele.libs.dao'
 
 ext {
     springBootVersion = '2.0.1.RELEASE'
@@ -103,9 +116,10 @@ publishing {
             artifact sourcesJar {
                 classifier "sources"
             }
-            groupId = 'org.jskele.libs.dao'
-            artifactId = 'lib-dao'
-            version = '1.0'
         }
     }
+}
+
+publishToMavenLocal.doLast {
+    println("The published artifact can be consumed by other local maven projects from local maven repo using ${project.group}:${project.name}:${project.version}")
 }
