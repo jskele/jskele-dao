@@ -4,6 +4,8 @@ plugins {
     id 'maven-publish'
 }
 
+group 'org.jskele.libs.dao'
+
 ext {
     springBootVersion = '2.0.1.RELEASE'
 }
@@ -103,8 +105,6 @@ publishing {
             artifact sourcesJar {
                 classifier "sources"
             }
-            groupId = 'org.jskele.libs.dao'
-            artifactId = 'lib-dao'
             version = '1.0'
         }
     }
