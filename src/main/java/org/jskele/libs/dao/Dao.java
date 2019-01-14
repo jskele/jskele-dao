@@ -1,16 +1,17 @@
 package org.jskele.libs.dao;
 
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-@Inherited
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+import org.springframework.stereotype.Indexed;
+
+@Indexed
 @Target({TYPE})
 @Retention(RUNTIME)
 public @interface Dao {
 
-    String schema() default "";
+  String schema() default "";
+
 }

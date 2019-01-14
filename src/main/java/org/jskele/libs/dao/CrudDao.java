@@ -1,6 +1,5 @@
 package org.jskele.libs.dao;
 
-@Dao
 public interface CrudDao<R extends EntityRow<I>, I> {
 
     @GenerateSql
