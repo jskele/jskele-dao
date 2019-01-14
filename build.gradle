@@ -119,3 +119,7 @@ publishing {
         }
     }
 }
+
+publishToMavenLocal.doLast {
+    println("The published artifact can be consumed by other local maven projects from local maven repo using ${project.group}:${project.name}:${project.version}")
+}
