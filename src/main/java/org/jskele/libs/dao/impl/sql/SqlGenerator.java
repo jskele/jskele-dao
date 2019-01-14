@@ -2,6 +2,7 @@ package org.jskele.libs.dao.impl.sql;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Converter;
+import com.google.common.base.Preconditions;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.jskele.libs.dao.Dao;
@@ -13,7 +14,11 @@ import org.springframework.core.annotation.AnnotationUtils;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 import static org.jskele.libs.dao.impl.DaoUtils.hasAnnotation;
@@ -26,13 +31,13 @@ class SqlGenerator {
     private final Method method;
     private final ParameterExtractor extractor;
 
-    public SqlSource createSource() {
+    public SqlSource createSource(boolean isBatchInsertOrUpdate) {
         if (hasPrefix("delete")) {
             return staticSqlSource(generateDelete());
         }
 
         if (hasPrefix("insert")) {
-            return staticSqlSource(generateInsert());
+            return args -> generateInsert(args, isBatchInsertOrUpdate);
         }
 
         if (hasPrefix("update")) {
@@ -70,12 +75,27 @@ class SqlGenerator {
         return "SELECT EXISTS(SELECT 1 FROM " + tableName() + whereCondition() + ")";
     }
 
-    private String generateInsert() {
-        return "INSERT INTO " + tableName() + " (" + insertColumns() + ") VALUES (" + insertValues() + ")" + insertReturning();
+    private String generateInsert(Object[] args, boolean isBatchInsert) {
+        if (isBatchInsert) {
+            // XXX: same sql needs to be used for all batch rows - using first row to generate that SQL.
+            // NB! Note that it may be unexpected that for some consecutive row another SQL could be created
+            // (for example if first row has id set, but second row has no id, then id of second row would be ignored during insert and taken from sequence instead)
+            // As it will probably be fairly uncommon situation,
+            // then we don't support detecting that problem right now
+            // (or solving it by splitting single batch into multiple batch statements).
+            Collection<?> batchArgsList = (Collection) args[0];
+            Preconditions.checkState(!batchArgsList.isEmpty(), "Didn't expect empty collection for batch operation");
+            Object firstRowArgs = batchArgsList.iterator().next();
+            return generateInsert(new Object[]{firstRowArgs}, false);
+        }
+        Map<String, Object> paramValuesByName = getParamValuesByName(args);
+        return "INSERT INTO " + tableName() + " (" + insertColumns(paramValuesByName) + ")" +
+                " VALUES (" + insertValues(paramValuesByName) + ")" + insertReturning();
     }
 
     private String insertReturning() {
-        if (isNumericId()) {
+        Class<?> idClass = getTypeOf("id");
+        if (idClass != null && (isNumericId(idClass) || method.getReturnType().isAssignableFrom(idClass))) {
             return " RETURNING id";
         }
 
@@ -94,10 +114,8 @@ class SqlGenerator {
         return generateSelect() + " FOR UPDATE";
     }
 
-    private String insertValues() {
-        String[] paramNames = extractor.names();
-        return Arrays.stream(paramNames)
-                .filter(this::notGeneratedColumn)
+    private String insertValues(Map<String, Object> paramValuesByName) {
+        return getParamNamesWithoutIdIfIdValueIsNull(paramValuesByName)
                 .map(name -> ":" + name)
                 .collect(joining(", "));
     }
@@ -117,6 +135,10 @@ class SqlGenerator {
             return names;
         }
 
+        return getParamNamesWithNotNullValues(names, args);
+    }
+
+    private String[] getParamNamesWithNotNullValues(String[] names, Object[] args) {
         Object[] values = extractor.values(args);
 
         return IntStream.range(0, names.length)
@@ -125,10 +147,36 @@ class SqlGenerator {
                 .toArray(String[]::new);
     }
 
-    private String insertColumns() {
+    private Stream<String> getParamNamesWithoutIdIfIdValueIsNull(Map<String, Object> paramValuesByName) {
+        return paramValuesByName.entrySet().stream()
+                .filter(entry -> isParamNameNotIdOrIdWithValue(entry.getKey(), entry.getValue()))
+                .map(Map.Entry::getKey);
+    }
+
+    private Map<String, Object> getParamValuesByName(Object[] args) {
         String[] paramNames = extractor.names();
-        return Arrays.stream(paramNames)
-                .filter(this::notGeneratedColumn)
+        Object[] values = extractor.values(args);
+        // Not using
+        // `IntStream.range(0, paramNames.length).boxed().collect(toMap(i -> paramNames[i], i -> values[i]));`
+        // as it would throw NPE when value is null
+        Map<String, Object> paramValuesByName = new HashMap<>();
+        for (int i = 0; i < paramNames.length; i++) {
+            if (paramValuesByName.put(paramNames[i], values[i]) != null) {
+                throw new IllegalStateException("Duplicate parameter name!");
+            }
+        }
+        return paramValuesByName;
+    }
+
+    private boolean isParamNameNotIdOrIdWithValue(String paramName, Object paramValue) {
+        if ("id".equals(paramName)) {
+            return paramValue != null;
+        }
+        return true;
+    }
+
+    private String insertColumns(Map<String, Object> paramValuesByName) {
+        return getParamNamesWithoutIdIfIdValueIsNull(paramValuesByName)
                 .map(this::convert)
                 .map(this::esc)
                 .collect(joining(", "));
@@ -170,11 +218,6 @@ class SqlGenerator {
         return esc(convert(name)) + " = :" + name;
     }
 
-
-    private boolean notGeneratedColumn(String name) {
-        return !(isNumericId() && name.equals("id"));
-    }
-
     private String tableName() {
         String daoName = daoClass.getSimpleName();
         String camelTableName = StringUtils.removeEnd(daoName, "Dao");
@@ -192,20 +235,23 @@ class SqlGenerator {
         return method.getName().startsWith(prefix);
     }
 
-    private boolean isNumericId() {
-        int idIndex = Arrays.asList(extractor.names()).indexOf("id");
-
-        if (idIndex == -1) {
-            return false;
-        }
-
-        Class<?> idClass = extractor.types()[idIndex];
-
+    private boolean isNumericId(Class<?> idClass) {
         if (LongValue.class.isAssignableFrom(idClass)) {
             return true;
         }
 
         return Number.class.isAssignableFrom(idClass);
     }
+
+    private Class<?> getTypeOf(String paramName) {
+        int idIndex = Arrays.asList(extractor.names()).indexOf(paramName);
+
+        if (idIndex == -1) {
+            return null;
+        }
+
+        return extractor.types()[idIndex];
+    }
+
 
 }

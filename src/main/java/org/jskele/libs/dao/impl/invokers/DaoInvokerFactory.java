@@ -1,5 +1,6 @@
 package org.jskele.libs.dao.impl.invokers;
 
+import com.google.common.base.Preconditions;
 import lombok.RequiredArgsConstructor;
 import org.jskele.libs.dao.impl.DaoUtils;
 import org.jskele.libs.dao.impl.MethodDetails;
@@ -30,7 +31,12 @@ public class DaoInvokerFactory {
         MethodDetails details = new MethodDetails(method);
 
         ParameterExtractor extractor = ParameterExtractor.create(method, daoClass);
-        SqlSource sqlSource = SqlSource.create(daoClass, method, extractor);
+        Preconditions.checkState(extractor.names() != null,
+                "Parameter names for generating SQL base based on %s can't be resolved. Try adding compiler arguments `-parameters`",
+                method);
+
+        boolean isBatchInsertOrUpdate = details.isBatchUpdate();
+        SqlSource sqlSource = SqlSource.create(daoClass, method, extractor, isBatchInsertOrUpdate);
 
         if (details.isUpdate()) {
             return args -> {
@@ -40,7 +46,7 @@ public class DaoInvokerFactory {
             };
         }
 
-        if (details.isBatchUpdate()) {
+        if (isBatchInsertOrUpdate) {
             return args -> {
                 SqlParameterSource[] paramsArray = parameterSourceArray(extractor, args);
                 String sql = sqlSource.generateSql(args);
