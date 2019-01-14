@@ -1,7 +1,14 @@
 package org.jskele.libs.dao.impl.sql;
 
-import static java.util.stream.Collectors.toMap;
-import static org.jskele.libs.dao.impl.DaoUtils.hasAnnotation;
+import com.google.common.io.Resources;
+import com.google.common.reflect.Reflection;
+import com.mitchellbosecke.pebble.PebbleEngine;
+import com.mitchellbosecke.pebble.error.PebbleException;
+import com.mitchellbosecke.pebble.loader.StringLoader;
+import com.mitchellbosecke.pebble.template.PebbleTemplate;
+import lombok.RequiredArgsConstructor;
+import org.jskele.libs.dao.SqlTemplate;
+import org.jskele.libs.dao.impl.params.ParameterExtractor;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -12,25 +19,16 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.stream.IntStream;
 
-import lombok.RequiredArgsConstructor;
-
-import org.jskele.libs.dao.SqlTemplate;
-import org.jskele.libs.dao.impl.params.ParameterExtractor;
-
-import com.google.common.io.Resources;
-import com.google.common.reflect.Reflection;
-import com.mitchellbosecke.pebble.PebbleEngine;
-import com.mitchellbosecke.pebble.error.PebbleException;
-import com.mitchellbosecke.pebble.loader.StringLoader;
-import com.mitchellbosecke.pebble.template.PebbleTemplate;
+import static java.util.stream.Collectors.toMap;
+import static org.jskele.libs.dao.impl.DaoUtils.hasAnnotation;
 
 @RequiredArgsConstructor
 class ClasspathSqlLoader {
     private static final PebbleEngine TEMPLATE_ENGINE = new PebbleEngine
-        .Builder()
-        .loader(new StringLoader())
-        .autoEscaping(false)
-        .build();
+            .Builder()
+            .loader(new StringLoader())
+            .autoEscaping(false)
+            .build();
 
 
     private final Method method;
@@ -64,10 +62,10 @@ class ClasspathSqlLoader {
             Object[] values = extractor.values(args);
 
             Map<String, Object> context = IntStream.range(0, names.length).boxed()
-                .collect(toMap(
-                    i -> names[i],
-                    i -> values[i]
-                ));
+                    .collect(toMap(
+                            i -> names[i],
+                            i -> values[i]
+                    ));
 
             StringWriter writer = new StringWriter();
             try {

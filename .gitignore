@@ -1,5 +1,13 @@
 .gradle
 build
 
-/.idea/*
+## IntelliJ
 *.iml
+/.idea/*
+!/.idea/codeStyles/
+!/.idea/compiler.xml
+!/.idea/encodings.xml
+!/.idea/runConfigurations/
+!/.idea/sqldialects.xml
+!/.idea/vcs.xml
+out/

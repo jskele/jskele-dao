@@ -1,20 +1,15 @@
 package org.jskele.libs.dao.impl.params;
 
-import static java.util.stream.Collectors.toMap;
+import lombok.RequiredArgsConstructor;
+import org.jskele.libs.dao.impl.DaoUtils;
 
-import java.beans.BeanInfo;
-import java.beans.FeatureDescriptor;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
+import java.beans.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Map;
 
-import lombok.RequiredArgsConstructor;
-
-import org.jskele.libs.dao.impl.DaoUtils;
+import static java.util.stream.Collectors.toMap;
 
 @RequiredArgsConstructor
 class BeanParameterExtractor implements ParameterExtractor {
@@ -27,8 +22,8 @@ class BeanParameterExtractor implements ParameterExtractor {
         Method[] readMethods = readMethods(beanClass, names);
 
         Class<?>[] types = Arrays.stream(readMethods)
-            .map(Method::getReturnType)
-            .toArray(Class<?>[]::new);
+                .map(Method::getReturnType)
+                .toArray(Class<?>[]::new);
 
         return new BeanParameterExtractor(names, readMethods, types);
     }
@@ -38,14 +33,14 @@ class BeanParameterExtractor implements ParameterExtractor {
             BeanInfo beanInfo = Introspector.getBeanInfo(beanClass);
 
             Map<String, Method> collect = Arrays.stream(beanInfo.getPropertyDescriptors())
-                .collect(toMap(
-                    FeatureDescriptor::getName,
-                    PropertyDescriptor::getReadMethod
-                ));
+                    .collect(toMap(
+                            FeatureDescriptor::getName,
+                            PropertyDescriptor::getReadMethod
+                    ));
 
             return Arrays.stream(properties)
-                .map(collect::get)
-                .toArray(Method[]::new);
+                    .map(collect::get)
+                    .toArray(Method[]::new);
         } catch (IntrospectionException e) {
             throw new RuntimeException(e);
         }
@@ -65,8 +60,8 @@ class BeanParameterExtractor implements ParameterExtractor {
     public Object[] values(Object[] args) {
         Object bean = args[0];
         return Arrays.stream(readMethods)
-            .map(a -> readValue(bean, a))
-            .toArray();
+                .map(a -> readValue(bean, a))
+                .toArray();
     }
 
     private Object readValue(Object bean, Method readMethod) {

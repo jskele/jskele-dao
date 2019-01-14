@@ -1,14 +1,5 @@
 package org.jskele.libs.embeddedpostgres;
 
-import static java.util.Collections.emptyList;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
 import de.flapdoodle.embed.process.config.IRuntimeConfig;
 import de.flapdoodle.embed.process.io.directories.FixedPath;
 import de.flapdoodle.embed.process.store.PostgresArtifactStoreBuilder;
@@ -20,47 +11,55 @@ import ru.yandex.qatools.embed.postgresql.PackagePaths;
 import ru.yandex.qatools.embed.postgresql.config.PostgresDownloadConfigBuilder;
 import ru.yandex.qatools.embed.postgresql.config.RuntimeConfigBuilder;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import static java.util.Collections.emptyList;
+
 @Slf4j
 @Getter
 class EmbeddedPostgresBean {
-	private final EmbeddedPostgres postgres = new EmbeddedPostgres();
+    private final EmbeddedPostgres postgres = new EmbeddedPostgres();
 
-	private String url;
+    private String url;
 
-	@PostConstruct
-	void init() throws IOException {
+    @PostConstruct
+    void init() throws IOException {
 
-		Path path = Paths.get(System.getProperty("user.home"), ".embedpostgresql", "embedded");
-		url = postgres.start(
-				cachedRuntimeConfig(path),
-				"localhost",
-				5433,
-				"embedded",
-				"embedded",
-				"embedded",
-				emptyList());
+        Path path = Paths.get(System.getProperty("user.home"), ".embedpostgresql", "embedded");
+        url = postgres.start(
+                cachedRuntimeConfig(path),
+                "localhost",
+                5433,
+                "embedded",
+                "embedded",
+                "embedded",
+                emptyList());
 
-		log.info("starting postgres: {}", url);
-	}
+        log.info("starting postgres: {}", url);
+    }
 
-	private static IRuntimeConfig cachedRuntimeConfig(Path cachedPath) {
-		final Command cmd = Command.Postgres;
-		final FixedPath cachedDir = new FixedPath(cachedPath.toString());
-		return new RuntimeConfigBuilder()
-				.defaults(cmd)
-				.daemonProcess(false)
-				.artifactStore(new PostgresArtifactStoreBuilder()
-						.defaults(cmd)
-						.tempDir(cachedDir)
-						.download(new PostgresDownloadConfigBuilder()
-								.defaultsForCommand(cmd)
-								.packageResolver(new PackagePaths(cmd, cachedDir))
-								.build()))
-				.build();
-	}
+    private static IRuntimeConfig cachedRuntimeConfig(Path cachedPath) {
+        final Command cmd = Command.Postgres;
+        final FixedPath cachedDir = new FixedPath(cachedPath.toString());
+        return new RuntimeConfigBuilder()
+                .defaults(cmd)
+                .daemonProcess(false)
+                .artifactStore(new PostgresArtifactStoreBuilder()
+                        .defaults(cmd)
+                        .tempDir(cachedDir)
+                        .download(new PostgresDownloadConfigBuilder()
+                                .defaultsForCommand(cmd)
+                                .packageResolver(new PackagePaths(cmd, cachedDir))
+                                .build()))
+                .build();
+    }
 
-	@PreDestroy
-	void cleanup() {
-		postgres.stop();
-	}
+    @PreDestroy
+    void cleanup() {
+        postgres.stop();
+    }
 }

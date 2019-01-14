@@ -1,9 +1,9 @@
 package org.jskele.libs.dao.impl;
 
+import lombok.RequiredArgsConstructor;
+
 import java.lang.reflect.Method;
 import java.util.List;
-
-import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class MethodDetails {

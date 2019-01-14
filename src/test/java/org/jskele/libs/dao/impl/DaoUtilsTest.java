@@ -2,7 +2,6 @@ package org.jskele.libs.dao.impl;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-
 import org.junit.Assert;
 import org.junit.Test;
 
