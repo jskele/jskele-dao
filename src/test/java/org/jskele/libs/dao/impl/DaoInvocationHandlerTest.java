@@ -246,6 +246,26 @@ public class DaoInvocationHandlerTest {
     }
 
     @Test
+    public void givenExistingId_exists_returnsTrue() {
+        // Given
+        TestTableRowId id = new TestTableRowId(1L);
+        // When
+        boolean exists = dao.exists(id);
+        // Then
+        assertThat(exists, equalTo(true));
+    }
+
+    @Test
+    public void givenNonExistingId_exists_returnsFalse() {
+        // Given
+        TestTableRowId id = new TestTableRowId(Long.MAX_VALUE);
+        // When
+        boolean exists = dao.exists(id);
+        // Then
+        assertThat(exists, equalTo(false));
+    }
+
+    @Test
     public void givenQueryForNoResults_find_returnsNull() {
         // Given
         String stringColumn = "notMatchingValue";

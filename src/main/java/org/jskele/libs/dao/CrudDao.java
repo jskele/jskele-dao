@@ -6,6 +6,9 @@ public interface CrudDao<R extends EntityRow<I>, I> {
     I insert(R row);
 
     @GenerateSql
+    boolean exists(I id);
+
+    @GenerateSql
     R select(I id);
 
     @GenerateSql
