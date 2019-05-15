@@ -13,7 +13,7 @@ import java.util.Map;
 class DaoInvocationHandler extends AbstractInvocationHandler {
 
     private final DaoInvokerFactory invokerFactory;
-    private final Map<Method, DaoInvoker> invokerMap = Maps.newHashMap();
+    private final Map<Method, DaoInvoker> invokerMap = Maps.newConcurrentMap();
     private final Class<?> daoClass;
 
     @Override
