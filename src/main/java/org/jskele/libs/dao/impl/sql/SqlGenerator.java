@@ -224,11 +224,17 @@ class SqlGenerator {
 
         String tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, camelTableName);
 
-        Dao annotation = AnnotationUtils.findAnnotation(daoClass, Dao.class);
-        String schema = annotation.schema();
+        String schema = detectSchema();
 
         String prefix = StringUtils.isBlank(schema) ? "" : esc(schema) + ".";
         return prefix + esc(tableName);
+    }
+
+    private String detectSchema() {
+        Dao annotation = AnnotationUtils.findAnnotation(daoClass, Dao.class);
+        String daoSpecificSchema = annotation.schema();
+        // TODO allow specifying default schema, so that it wouldn't need to be set for every Dao individually
+        return daoSpecificSchema;
     }
 
     private boolean hasPrefix(String prefix) {
