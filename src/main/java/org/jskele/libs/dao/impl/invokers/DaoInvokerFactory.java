@@ -7,6 +7,7 @@ import org.jskele.libs.dao.impl.mappers.RowMapperFactory;
 import org.jskele.libs.dao.impl.params.DaoSqlParameterSource;
 import org.jskele.libs.dao.impl.params.ParameterExtractor;
 import org.jskele.libs.dao.impl.sql.SqlSource;
+import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 import javax.sql.DataSource;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Supplier;
 
 @Component
@@ -67,9 +69,9 @@ public class DaoInvokerFactory {
             SqlParameterSource params = parameterSource(extractor, args);
             String sql = sqlSource.generateSql(args);
             RowMapper<?> rowMapper = rowMapperSupplier.get();
-            return jdbcTemplate.queryForObject(sql, params, rowMapper);
+            List<?> results = jdbcTemplate.query(sql, params, rowMapper);
+            return DataAccessUtils.singleResult(results);
         };
-
     }
 
     private SqlParameterSource[] parameterSourceArray(ParameterExtractor extractor, Object[] args) {

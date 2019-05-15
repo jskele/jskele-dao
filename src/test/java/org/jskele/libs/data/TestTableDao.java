@@ -21,4 +21,6 @@ public interface TestTableDao extends CrudDao<TestTableRow, TestTableRowId> {
     TestTableRow selectForUpdate(TestTableRowId id);
 
     List<TestTableRow> findByNumericColumnIn(String excludedValue, List<Long> numericColumns);
+
+    TestTableRow findByStringColumn(String stringColumn);
 }

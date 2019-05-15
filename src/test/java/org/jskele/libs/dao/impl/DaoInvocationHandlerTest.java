@@ -6,6 +6,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -242,6 +243,43 @@ public class DaoInvocationHandlerTest {
         } catch (DataIntegrityViolationException e) {
             assertThat(e.getMessage(), containsString("null value in column \"id\" violates not-null constraint"));
         }
+    }
+
+    @Test
+    public void givenQueryForNoResults_find_returnsNull() {
+        // Given
+        String stringColumn = "notMatchingValue";
+        // When
+        TestTableRow result = dao.findByStringColumn(stringColumn);
+        // Then
+        assertThat(result, equalTo(null));
+    }
+
+    @Test
+    public void givenQueryForOneResult_find_returnsRow() {
+        // Given
+        String stringColumn = "queryForOneResult-" + System.currentTimeMillis();
+        TestTableRow row = TestTableRow.builder().stringColumn(stringColumn).build();
+        TestTableRowId id = dao.insert(row);
+        // When
+        TestTableRow result = dao.findByStringColumn(stringColumn);
+        // Then
+        assertThat(result.getId(), equalTo(id));
+        assertThat(result.getStringColumn(), equalTo(stringColumn));
+    }
+
+    @Test(expected = DataRetrievalFailureException.class)
+    public void givenQueryForMultipleResult_find_throwsException() {
+        // Given
+        String stringColumn = "row1";
+        dao.insert(TestTableRow.builder()
+                .stringColumn(stringColumn)
+                .build()
+        );
+        // When
+        TestTableRow result = dao.findByStringColumn(stringColumn);
+        // Then
+        fail("Expected exception, got " + result);
     }
 
     private Callable<Void> callable(int id, TestTableRowId insertedId, TransactionTemplate transactionTemplate, ConcurrentLinkedQueue<Integer> queue) {
