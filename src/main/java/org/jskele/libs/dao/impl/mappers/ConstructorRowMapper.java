@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.JdbcUtils;
 
@@ -27,10 +26,6 @@ import static com.google.common.base.Preconditions.checkState;
 @Slf4j
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class ConstructorRowMapper<T> implements RowMapper<T> {
-
-    public ConstructorRowMapper(Class<T> rowClass) {
-        this(findConstructor(rowClass), new DefaultConversionService());
-    }
 
     public ConstructorRowMapper(Class<T> rowClass, ConversionService conversionService) {
         this(findConstructor(rowClass), conversionService);
@@ -204,7 +199,6 @@ public class ConstructorRowMapper<T> implements RowMapper<T> {
                 "rowClass %s has no constructors annotated with @ConstructorProperties",
                 rowClass);
 
-        @SuppressWarnings("unchecked")
         Constructor<T> constructor = (Constructor<T>) annotatedConstructor;
         return constructor;
     }
