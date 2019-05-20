@@ -47,11 +47,17 @@ dependencies {
             'org.projectlombok:lombok',
     )
 
+    api(
+            // Exposing spring-context via api dependencies configuration, because
+            // `annotationProcessor 'org.springframework:spring-context-indexer'`
+            // should be used by projects using this project (to detect `@Dao` classes)
+            // and spring-context is needed for compiling classes annotated with `@Dao` (as it uses `@Indexed`)
+            'org.springframework:spring-context',
+    )
+
     implementation(
             'com.google.guava:guava',
-            'org.springframework:spring-core',
             'org.springframework:spring-jdbc',
-            'org.springframework:spring-context',
             'org.springframework.boot:spring-boot-autoconfigure',
             'commons-beanutils:commons-beanutils:1.9.3',
             'org.apache.commons:commons-lang3',
@@ -59,7 +65,6 @@ dependencies {
             'org.jskele:lib-values:1.0',
 
             'com.mitchellbosecke:pebble:2.4.0',
-            'org.reflections:reflections:0.9.11',
             'org.postgresql:postgresql',
     )
 
