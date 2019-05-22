@@ -1,0 +1,9 @@
+SELECT *
+FROM test_table
+where string_column = :stringColumn
+AND numeric_column
+{% if numericColumn is not null %}
+    = :numericColumn
+{% else %}
+    IS NULL
+{% endif %}

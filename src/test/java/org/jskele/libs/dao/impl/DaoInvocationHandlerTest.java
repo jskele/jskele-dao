@@ -331,6 +331,25 @@ public class DaoInvocationHandlerTest {
         assertThat(results.get(0).toBuilder().id(null).build(), equalTo(row2));
     }
 
+    @Test
+    public void givenSqlTemplateWithNullableParameterWithNullValue_find_returnsRow() {
+        testSqlTemplateWithNullableParameter(null);
+    }
+
+    @Test
+    public void givenSqlTemplateWithNullableParameterWithNotNullValue_find_returnsRow() {
+        testSqlTemplateWithNullableParameter(1);
+    }
+
+    private void testSqlTemplateWithNullableParameter(Integer numericColumnValue) {
+        String stringColumn = "numeric_column couldBeNULL";
+        // When
+        TestTableRow result = dao.findByStringColumnAndNullableNumericColumn(stringColumn, numericColumnValue);
+        // Then
+        assertThat(result, notNullValue());
+        assertThat(result.getNumericColumn(), equalTo(numericColumnValue));
+    }
+
     private Callable<Void> callable(int id, TestTableRowId insertedId, TransactionTemplate transactionTemplate, ConcurrentLinkedQueue<Integer> queue) {
         return () -> transactionTemplate.execute(status -> {
             TestTableRow row;

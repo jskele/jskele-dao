@@ -4,6 +4,7 @@ import app.data.TestTableRow.JsonColumn;
 import org.jskele.libs.dao.CrudDao;
 import org.jskele.libs.dao.Dao;
 import org.jskele.libs.dao.GenerateSql;
+import org.jskele.libs.dao.SqlTemplate;
 
 import java.util.List;
 
@@ -25,6 +26,9 @@ public interface TestTableDao extends CrudDao<TestTableRow, TestTableRowId> {
     List<TestTableRow> findByNumericColumnIn(String excludedValue, List<Long> numericColumns);
 
     TestTableRow findByStringColumn(String stringColumn);
+
+    @SqlTemplate
+    TestTableRow findByStringColumnAndNullableNumericColumn(String stringColumn, Integer numericColumn);
 
     /**
      * NB! This currently THROWS EXCEPTION
