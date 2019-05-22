@@ -1,6 +1,7 @@
 package org.jskele.libs.dao.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.jskele.libs.dao.Dao;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -57,6 +58,10 @@ public class DaoRegistrator implements BeanDefinitionRegistryPostProcessor {
     }
 
     private String beanName(Class<?> daoClass) {
+        Component componentAnnotation = daoClass.getAnnotation(Component.class);
+        if (componentAnnotation != null && StringUtils.isNotBlank(componentAnnotation.value())) {
+            return componentAnnotation.value();
+        }
         return Introspector.decapitalize(daoClass.getSimpleName());
     }
 
