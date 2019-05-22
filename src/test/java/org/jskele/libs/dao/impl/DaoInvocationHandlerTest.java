@@ -254,6 +254,56 @@ public class DaoInvocationHandlerTest {
     }
 
     @Test
+    public void givenRowWithId_insertWithVoidReturnType_succeeds() {
+        // Given
+        TestTableWithUuidIdRow row = TestTableWithUuidIdRow.builder()
+                .id(new TestTableWithUuidIdRowId())
+                .stringColumn("whatEver inserted")
+                .build();
+
+        // When
+        testTableWithUuidIdDao.insertWithVoidReturnType(row);
+
+        // Then
+        TestTableWithUuidIdRow persistedRow = testTableWithUuidIdDao.select(row.getId());
+        assertThat(persistedRow, equalTo(row));
+    }
+
+    @Test
+    public void givenModifiedRow_updateMethodWithVoidReturnType_updatesPersistedRow() {
+        // Given
+        TestTableWithUuidIdRow row = TestTableWithUuidIdRow.builder()
+                .id(new TestTableWithUuidIdRowId())
+                .stringColumn("whatEver to be updated")
+                .build();
+        testTableWithUuidIdDao.insert(row);
+
+        // When
+        row = row.withStringColumn("updated at " + System.currentTimeMillis());
+        testTableWithUuidIdDao.updateMethodWithVoidReturnType(row);
+
+        // Then
+        TestTableWithUuidIdRow updatedRow = testTableWithUuidIdDao.select(row.getId());
+        assertThat(updatedRow, equalTo(row));
+    }
+
+    @Test
+    public void givenExistingRowId_deleteWithVoidReturnType_deletesRow() {
+        // Given
+        TestTableWithUuidIdRow row = TestTableWithUuidIdRow.builder()
+                .id(new TestTableWithUuidIdRowId())
+                .stringColumn("whatEver to be deleted")
+                .build();
+        testTableWithUuidIdDao.insertWithVoidReturnType(row);
+
+        // When
+        testTableWithUuidIdDao.deleteWithVoidReturnType(row.getId());
+
+        // Then
+        assertThat(testTableWithUuidIdDao.exists(row.getId()), equalTo(false));
+    }
+
+    @Test
     public void givenExistingId_exists_returnsTrue() {
         // Given
         TestTableRowId id = new TestTableRowId(1L);
