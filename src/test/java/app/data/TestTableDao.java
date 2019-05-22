@@ -15,9 +15,6 @@ public interface TestTableDao extends CrudDao<TestTableRow, TestTableRowId> {
     List<TestTableRow> selectAll();
 
     @GenerateSql
-    int[] insertBatch(List<TestTableRow> rows);
-
-    @GenerateSql
     int[] updateBatch(List<TestTableRow> rows);
 
     @GenerateSql
