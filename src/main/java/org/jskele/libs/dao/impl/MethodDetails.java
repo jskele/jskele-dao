@@ -13,11 +13,11 @@ public class MethodDetails {
         return hasReturnType(List.class);
     }
 
-    public boolean isUpdate() {
+    public boolean isInsertUpdateOrDelete() {
         return hasReturnType(int.class);
     }
 
-    public boolean isBatchUpdate() {
+    public boolean isBatchInsertOrUpdate() {
         return hasReturnType(int[].class);
     }
 
