@@ -1,5 +1,6 @@
 package app.data;
 
+import app.data.TestTableRow.JsonColumn;
 import org.jskele.libs.dao.CrudDao;
 import org.jskele.libs.dao.Dao;
 import org.jskele.libs.dao.GenerateSql;
@@ -24,4 +25,14 @@ public interface TestTableDao extends CrudDao<TestTableRow, TestTableRowId> {
     List<TestTableRow> findByNumericColumnIn(String excludedValue, List<Long> numericColumns);
 
     TestTableRow findByStringColumn(String stringColumn);
+
+    /**
+     * NB! This currently THROWS EXCEPTION
+     * because using {@link JsonColumn}
+     * (that extends {@link org.jskele.libs.dao.JsonValue} and corresponds to `json` data type in Postgres DB)
+     * in SQL WHERE clause may produce unexpected results,
+     * as Postgres `json` data type (unlike `jsonb`) is sensitive to JSON formatting
+     */
+    @GenerateSql
+    List<TestTableRow> findByJsonColumn(JsonColumn jsonColumn);
 }

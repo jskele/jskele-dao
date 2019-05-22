@@ -1,6 +1,7 @@
 package org.jskele.libs.dao.impl;
 
 import app.data.*;
+import app.data.TestTableRow.JsonColumn;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +53,7 @@ public class DaoInvocationHandlerTest {
         TestTableRow row = TestTableRow.builder()
                 .stringColumn("value")
                 .numericColumn(99)
+                .jsonColumn(new JsonColumn("{}"))
                 .build();
 
         // When
@@ -65,6 +67,7 @@ public class DaoInvocationHandlerTest {
         assertThat(actual.getId().toValue(), equalTo(expectedGeneratedIdValue));
         assertThat(actual.getNumericColumn(), equalTo(99));
         assertThat(actual.getStringColumn(), equalTo("value"));
+        assertThat(actual.getJsonColumn(), equalTo(row.getJsonColumn()));
     }
 
     @Test
@@ -101,6 +104,8 @@ public class DaoInvocationHandlerTest {
 
         // Then
         assertThat(actualRows, hasSize(2));
+        TestTableRow persistedRow1 = dao.select(row1.getId());
+        assertThat(persistedRow1, equalTo(row1));
     }
 
     @Test
@@ -130,6 +135,8 @@ public class DaoInvocationHandlerTest {
         // Then
         assertThat(updatedCounts, equalTo(new int[]{1, 1}));
         assertThat(actualRows, hasSize(2));
+        TestTableRow persistedRow1 = dao.select(row1.getId());
+        assertThat(persistedRow1, equalTo(row1));
     }
 
     @Test
@@ -139,11 +146,13 @@ public class DaoInvocationHandlerTest {
         TestTableRow rowToBeUpdated = TestTableRow.builder()
                 .id(new TestTableRowId(idToBeUpdated))
                 .numericColumn(10)
+                .jsonColumn(new JsonColumn("{\"a\":\"b\"}"))
                 .build();
         TestTableRow expected = TestTableRow.builder()
                 .id(new TestTableRowId(idToBeUpdated))
                 .stringColumn("row1")
                 .numericColumn(10)
+                .jsonColumn(rowToBeUpdated.getJsonColumn())
                 .build();
 
         // When
@@ -302,6 +311,26 @@ public class DaoInvocationHandlerTest {
         fail("Expected exception, got " + result);
     }
 
+    @Test(expected = RuntimeException.class)
+    public void givenJsonValueInSearchConstraint_find_failsWithExceptionAsImplementationIsntEnabled() {
+        // Given
+        long timestamp = System.currentTimeMillis();
+        TestTableRow row1 = TestTableRow.builder()
+                .jsonColumn(new JsonColumn("{\"timestamp\":\"" + timestamp + "\"}"))
+                .build();
+        dao.insert(row1);
+        TestTableRow row2 = row1.toBuilder()
+                .jsonColumn(new JsonColumn("{\"timestamp\":\"" + timestamp + 1 + "\"}"))
+                .build();
+        dao.insert(row2);
+        // When
+        List<TestTableRow> results = dao.findByJsonColumn(row2.getJsonColumn());
+        fail("Expected that usage of JsonValue in SQL WHERE clause isn't enabled (and throws exception) - not sure if it should be enabled or not");
+        // Then
+        assertThat(results.size(), equalTo(1));
+        assertThat(results.get(0).toBuilder().id(null).build(), equalTo(row2));
+    }
+
     private Callable<Void> callable(int id, TestTableRowId insertedId, TransactionTemplate transactionTemplate, ConcurrentLinkedQueue<Integer> queue) {
         return () -> transactionTemplate.execute(status -> {
             TestTableRow row;
@@ -335,6 +364,7 @@ public class DaoInvocationHandlerTest {
                 .id(id == null ? null : new TestTableRowId(id))
                 .stringColumn(value)
                 .numericColumn(numeric)
+                .jsonColumn(new JsonColumn("{\"value\":\"" + value + "\"}"))
                 .build();
     }
 

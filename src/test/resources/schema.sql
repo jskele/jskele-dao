@@ -1,6 +1,7 @@
 CREATE TABLE test_table
 (
   id             BIGSERIAL PRIMARY KEY,
+  json_column    json,
   string_column  TEXT,
   numeric_column INTEGER
 );

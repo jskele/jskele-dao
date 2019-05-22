@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.jskele.libs.dao.Dao;
 import org.jskele.libs.dao.ExcludeNulls;
+import org.jskele.libs.dao.JsonValue;
 import org.jskele.libs.dao.impl.DaoUtils;
 import org.jskele.libs.dao.impl.params.ParameterExtractor;
 import org.jskele.libs.values.LongValue;
@@ -115,8 +116,18 @@ class SqlGenerator {
 
     private String insertValues(Map<String, Object> paramValuesByName) {
         return getParamNamesWithoutIdIfIdValueIsNull(paramValuesByName)
-                .map(name -> ":" + name)
+                .map(name -> convertForInsertValue(name, paramValuesByName))
                 .collect(joining(", "));
+    }
+
+    private String convertForInsertValue(String paramName, Map<String, Object> paramValuesByName) {
+        String parameterNamePlaceholder = ":" + paramName;
+        Object paramValue = paramValuesByName.get(paramName);
+        if (paramValue instanceof JsonValue) {
+            // this is Postgres specific syntax
+            return parameterNamePlaceholder + "::json";
+        }
+        return parameterNamePlaceholder;
     }
 
     private String updateColumns(Object[] args) {
@@ -124,7 +135,7 @@ class SqlGenerator {
 
         return Arrays.stream(paramNames)
                 .filter(name -> !name.equals("id"))
-                .map(this::columnEqualsParameter)
+                .map((String name) -> columnEqualsParameter(name, false))
                 .collect(joining(", "));
     }
 
@@ -196,14 +207,30 @@ class SqlGenerator {
         }
 
         String predicates = Arrays.stream(paramNames)
-                .map(this::columnEqualsParameter)
+                .map(name -> columnEqualsParameter(name, true))
                 .collect(joining(" AND "));
 
         return " WHERE " + predicates;
     }
 
-    private String columnEqualsParameter(String name) {
-        return esc(convert(name)) + " = :" + name;
+    private String columnEqualsParameter(String name, boolean usingInWhereClause) {
+        String placeholder = ":" + name;
+        String columnName = esc(convert(name));
+        if (JsonValue.class.isAssignableFrom(extractor.getTypeOf(name))) {
+            // this is Postgres specific syntax
+            if (usingInWhereClause) {
+                /* Not sure if it should be implemented in SQL WHERE clause,
+                 * as it may produce unexpected results,
+                 * because Postgres `json` data type (unlike `jsonb`) is sensitive to JSON formatting.
+                 * Implementation that would work:
+                return columnName + "::text = " + placeholder + "::text";
+                */
+                throw new RuntimeException("TODO: Detected usage of " + JsonValue.class.getSimpleName() + " in SQL WHERE clause for column '" + columnName + "'. " +
+                        "It is easy to implement (in fact it is just commented out), but i'm not sure if it should be enabled");
+            }
+            placeholder += "::json";
+        }
+        return columnName + " = " + placeholder;
     }
 
     private String tableName() {

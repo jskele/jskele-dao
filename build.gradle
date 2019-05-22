@@ -60,6 +60,7 @@ dependencies {
 
             'com.mitchellbosecke:pebble:2.4.0',
             'org.reflections:reflections:0.9.11',
+            'org.postgresql:postgresql',
     )
 
     testAnnotationProcessor(
@@ -79,7 +80,6 @@ dependencies {
 
     testRuntime(
             'org.springframework.boot:spring-boot-starter-logging',
-            'org.postgresql:postgresql'
     )
 
     sourceSets {
