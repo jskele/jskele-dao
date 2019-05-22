@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 class DaoFactory {
 
+    static final String BEAN_NAME = "daoFactory";
+    static final String METHOD_NAME = "create";
+
     private final DaoInvokerFactory invokerFactory;
 
     public <T> T create(Class<T> daoClass) {
