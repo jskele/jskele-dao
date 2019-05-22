@@ -61,7 +61,7 @@ dependencies {
             'org.reflections:reflections:0.9.11',
     )
 
-    testAnnotationProcessor (
+    testAnnotationProcessor(
             "org.springframework:spring-context-indexer",
             "org.projectlombok:lombok",
     )
