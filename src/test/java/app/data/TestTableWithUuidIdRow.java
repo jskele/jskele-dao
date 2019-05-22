@@ -1,4 +1,4 @@
-package org.jskele.libs.data;
+package app.data;
 
 import lombok.*;
 import org.jskele.libs.dao.EntityRow;
@@ -8,9 +8,9 @@ import org.jskele.libs.dao.EntityRow;
 @ToString
 @EqualsAndHashCode
 @RequiredArgsConstructor
-public class TestTableRow implements EntityRow<TestTableRowId> {
+public class TestTableWithUuidIdRow implements EntityRow<TestTableWithUuidIdRowId> {
 
-    private final TestTableRowId id;
+    private final TestTableWithUuidIdRowId id;
     private final String stringColumn;
     private final Integer numericColumn;
 
