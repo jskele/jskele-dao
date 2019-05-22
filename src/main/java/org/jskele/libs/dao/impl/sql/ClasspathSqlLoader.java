@@ -1,5 +1,6 @@
 package org.jskele.libs.dao.impl.sql;
 
+import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
 import com.google.common.reflect.Reflection;
 import com.mitchellbosecke.pebble.PebbleEngine;
@@ -95,7 +96,10 @@ class ClasspathSqlLoader {
         String packageName = Reflection.getPackageName(declaringClass);
         String fileName = "/" + packageName.replace(".", "/") + "/" + methodName + "." + suffix;
 
-        return declaringClass.getResource(fileName);
+        URL resource = declaringClass.getResource(fileName);
+        Preconditions.checkState(resource != null, "Resource " + fileName + " doesn't exist in runtime classpath. " +
+                "If you want to keep sql files next to Dao interfaces instead of resources folder, then configure build tool to copy sql files to runtime classpath!");
+        return resource;
     }
 
     public boolean isTemplated() {
