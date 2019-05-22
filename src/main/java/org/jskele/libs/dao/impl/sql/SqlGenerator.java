@@ -15,7 +15,6 @@ import org.springframework.core.annotation.AnnotationUtils;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -154,18 +153,7 @@ class SqlGenerator {
     }
 
     private Map<String, Object> getParamValuesByName(Object[] args) {
-        String[] paramNames = extractor.names();
-        Object[] values = extractor.values(args);
-        // Not using
-        // `IntStream.range(0, paramNames.length).boxed().collect(toMap(i -> paramNames[i], i -> values[i]));`
-        // as it would throw NPE when value is null
-        Map<String, Object> paramValuesByName = new HashMap<>();
-        for (int i = 0; i < paramNames.length; i++) {
-            if (paramValuesByName.put(paramNames[i], values[i]) != null) {
-                throw new IllegalStateException("Duplicate parameter name!");
-            }
-        }
-        return paramValuesByName;
+        return DaoUtils.getParamValuesByName(args, this.extractor);
     }
 
     private boolean isParamNameNotIdOrIdWithValue(String paramName, Object paramValue) {
