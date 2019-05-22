@@ -13,6 +13,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Dao {
 
+    /**
+     * With default configuration it can be used to specify DB schema to be used by the Dao class.
+     * Default behaviour can be overridden using custom {@link DbSchemaResolver} bean.
+     */
     String schema() default "";
 
 }

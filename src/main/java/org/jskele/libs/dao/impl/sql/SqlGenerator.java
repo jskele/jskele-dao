@@ -5,13 +5,12 @@ import com.google.common.base.Converter;
 import com.google.common.base.Preconditions;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.jskele.libs.dao.Dao;
+import org.jskele.libs.dao.DbSchemaResolver;
 import org.jskele.libs.dao.ExcludeNulls;
 import org.jskele.libs.dao.JsonValue;
 import org.jskele.libs.dao.impl.DaoUtils;
 import org.jskele.libs.dao.impl.params.ParameterExtractor;
 import org.jskele.libs.values.LongValue;
-import org.springframework.core.annotation.AnnotationUtils;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -30,6 +29,7 @@ class SqlGenerator {
     private final Class<?> daoClass;
     private final Method method;
     private final ParameterExtractor extractor;
+    private final DbSchemaResolver dbSchemaResolver;
 
     public SqlSource createSource(boolean isBatchInsertOrUpdate) {
         if (hasPrefix("delete")) {
@@ -246,10 +246,7 @@ class SqlGenerator {
     }
 
     private String detectSchema() {
-        Dao annotation = AnnotationUtils.findAnnotation(daoClass, Dao.class);
-        String daoSpecificSchema = annotation.schema();
-        // TODO allow specifying default schema, so that it wouldn't need to be set for every Dao individually
-        return daoSpecificSchema;
+        return dbSchemaResolver.resolve(daoClass);
     }
 
     private boolean hasPrefix(String prefix) {

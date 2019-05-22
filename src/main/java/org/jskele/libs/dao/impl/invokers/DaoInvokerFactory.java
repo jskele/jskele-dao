@@ -2,6 +2,7 @@ package org.jskele.libs.dao.impl.invokers;
 
 import com.google.common.base.Preconditions;
 import lombok.RequiredArgsConstructor;
+import org.jskele.libs.dao.DbSchemaResolver;
 import org.jskele.libs.dao.impl.MethodDetails;
 import org.jskele.libs.dao.impl.mappers.RowMapperFactory;
 import org.jskele.libs.dao.impl.params.DaoSqlParameterSource;
@@ -26,6 +27,7 @@ public class DaoInvokerFactory {
     private final NamedParameterJdbcTemplate jdbcTemplate;
     private final DataSource dataSource;
     private final RowMapperFactory rowMapperFactory;
+    private final DbSchemaResolver dbSchemaResolver;
 
     public DaoInvoker create(Method method, Class<?> daoClass) {
         MethodDetails details = new MethodDetails(method);
@@ -36,7 +38,7 @@ public class DaoInvokerFactory {
                 method);
 
         boolean isBatchInsertOrUpdate = details.isBatchInsertOrUpdate();
-        SqlSource sqlSource = SqlSource.create(daoClass, method, extractor, isBatchInsertOrUpdate);
+        SqlSource sqlSource = SqlSource.create(daoClass, method, extractor, isBatchInsertOrUpdate, dbSchemaResolver);
 
         if (details.isInsertUpdateOrDelete()) {
             return args -> {
