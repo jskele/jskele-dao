@@ -53,12 +53,12 @@ public class DaoInvokerFactory {
         }
 
         Supplier<RowMapper<?>> rowMapperSupplier = rowMapperFactory.createSupplier(method, daoClass);
-        RowMapper<?> rowMapper = rowMapperSupplier.get();
 
         if (details.isQueryList()) {
             return args -> {
                 SqlParameterSource params = parameterSource(extractor, args);
                 String sql = sqlSource.generateSql(args);
+                RowMapper<?> rowMapper = rowMapperSupplier.get();
                 return jdbcTemplate.query(sql, params, rowMapper);
             };
         }
@@ -66,6 +66,7 @@ public class DaoInvokerFactory {
         return args -> {
             SqlParameterSource params = parameterSource(extractor, args);
             String sql = sqlSource.generateSql(args);
+            RowMapper<?> rowMapper = rowMapperSupplier.get();
             return jdbcTemplate.queryForObject(sql, params, rowMapper);
         };
 
