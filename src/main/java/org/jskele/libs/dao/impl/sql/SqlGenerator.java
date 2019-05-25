@@ -15,7 +15,6 @@ import org.springframework.core.annotation.AnnotationUtils;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -94,7 +93,7 @@ class SqlGenerator {
     }
 
     private String insertReturning() {
-        Class<?> idClass = getTypeOf("id");
+        Class<?> idClass = extractor.getTypeOf("id");
         if (idClass != null && (isNumericId(idClass) || method.getReturnType().isAssignableFrom(idClass))) {
             return " RETURNING id";
         }
@@ -154,18 +153,7 @@ class SqlGenerator {
     }
 
     private Map<String, Object> getParamValuesByName(Object[] args) {
-        String[] paramNames = extractor.names();
-        Object[] values = extractor.values(args);
-        // Not using
-        // `IntStream.range(0, paramNames.length).boxed().collect(toMap(i -> paramNames[i], i -> values[i]));`
-        // as it would throw NPE when value is null
-        Map<String, Object> paramValuesByName = new HashMap<>();
-        for (int i = 0; i < paramNames.length; i++) {
-            if (paramValuesByName.put(paramNames[i], values[i]) != null) {
-                throw new IllegalStateException("Duplicate parameter name!");
-            }
-        }
-        return paramValuesByName;
+        return DaoUtils.getParamValuesByName(args, this.extractor);
     }
 
     private boolean isParamNameNotIdOrIdWithValue(String paramName, Object paramValue) {
@@ -224,11 +212,17 @@ class SqlGenerator {
 
         String tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, camelTableName);
 
-        Dao annotation = AnnotationUtils.findAnnotation(daoClass, Dao.class);
-        String schema = annotation.schema();
+        String schema = detectSchema();
 
         String prefix = StringUtils.isBlank(schema) ? "" : esc(schema) + ".";
         return prefix + esc(tableName);
+    }
+
+    private String detectSchema() {
+        Dao annotation = AnnotationUtils.findAnnotation(daoClass, Dao.class);
+        String daoSpecificSchema = annotation.schema();
+        // TODO allow specifying default schema, so that it wouldn't need to be set for every Dao individually
+        return daoSpecificSchema;
     }
 
     private boolean hasPrefix(String prefix) {
@@ -242,16 +236,5 @@ class SqlGenerator {
 
         return Number.class.isAssignableFrom(idClass);
     }
-
-    private Class<?> getTypeOf(String paramName) {
-        int idIndex = Arrays.asList(extractor.names()).indexOf(paramName);
-
-        if (idIndex == -1) {
-            return null;
-        }
-
-        return extractor.types()[idIndex];
-    }
-
 
 }

@@ -1,7 +1,5 @@
 package org.jskele.libs.dao.impl;
 
-import java.beans.Introspector;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.jskele.libs.dao.Dao;
 import org.springframework.beans.BeansException;
@@ -14,58 +12,61 @@ import org.springframework.context.index.CandidateComponentsIndex;
 import org.springframework.context.index.CandidateComponentsIndexLoader;
 import org.springframework.stereotype.Component;
 
+import java.beans.Introspector;
+import java.util.Set;
+
 @Component
 @RequiredArgsConstructor
 public class DaoRegistrator implements BeanDefinitionRegistryPostProcessor {
 
-  @Override
-  public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry)
-      throws BeansException {
-    CandidateComponentsIndex index = CandidateComponentsIndexLoader.loadIndex(null);
+    @Override
+    public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry)
+            throws BeansException {
+        CandidateComponentsIndex index = CandidateComponentsIndexLoader.loadIndex(null);
 
-    if (index == null) {
-      throw new IllegalStateException("Spring component index not found, please add spring-context-indexer annotation processor");
+        if (index == null) {
+            throw new IllegalStateException("Spring component index not found, please add spring-context-indexer annotation processor");
+        }
+
+        Set<String> candidateTypes = index.getCandidateTypes("", Dao.class.getName());
+
+        candidateTypes.stream()
+                .map(this::loadClass)
+                .forEach(daoClass -> register(daoClass, registry));
     }
 
-    Set<String> candidateTypes = index.getCandidateTypes("", Dao.class.getName());
-
-    candidateTypes.stream()
-        .map(this::loadClass)
-        .forEach(daoClass -> register(daoClass, registry));
-  }
-
-  private void register(Class<?> daoClass, BeanDefinitionRegistry registry) {
-    registry.registerBeanDefinition(
-        beanName(daoClass),
-        beanDefinition(daoClass)
-    );
-  }
-
-  @Override
-  public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory)
-      throws BeansException {
-  }
-
-
-  private Class<?> loadClass(String s) {
-    try {
-      return Class.forName(s);
-    } catch (ClassNotFoundException e) {
-      throw new RuntimeException(e);
+    private void register(Class<?> daoClass, BeanDefinitionRegistry registry) {
+        registry.registerBeanDefinition(
+                beanName(daoClass),
+                beanDefinition(daoClass)
+        );
     }
-  }
 
-  private String beanName(Class<?> daoClass) {
-    return Introspector.decapitalize(daoClass.getSimpleName());
-  }
+    @Override
+    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory)
+            throws BeansException {
+    }
 
-  private BeanDefinition beanDefinition(Class<?> daoClass) {
-    BeanDefinition bd = new GenericBeanDefinition();
 
-    bd.setFactoryBeanName(DaoFactory.BEAN_NAME);
-    bd.setFactoryMethodName(DaoFactory.METHOD_NAME);
-    bd.getConstructorArgumentValues().addIndexedArgumentValue(0, daoClass);
+    private Class<?> loadClass(String s) {
+        try {
+            return Class.forName(s);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-    return bd;
-  }
+    private String beanName(Class<?> daoClass) {
+        return Introspector.decapitalize(daoClass.getSimpleName());
+    }
+
+    private BeanDefinition beanDefinition(Class<?> daoClass) {
+        BeanDefinition bd = new GenericBeanDefinition();
+
+        bd.setFactoryBeanName(DaoFactory.BEAN_NAME);
+        bd.setFactoryMethodName(DaoFactory.METHOD_NAME);
+        bd.getConstructorArgumentValues().addIndexedArgumentValue(0, daoClass);
+
+        return bd;
+    }
 }

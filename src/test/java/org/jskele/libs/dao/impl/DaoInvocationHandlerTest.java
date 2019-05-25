@@ -1,6 +1,6 @@
 package org.jskele.libs.dao.impl;
 
-import org.jskele.libs.data.*;
+import app.data.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

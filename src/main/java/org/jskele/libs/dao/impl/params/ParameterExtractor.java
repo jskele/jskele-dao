@@ -3,6 +3,7 @@ package org.jskele.libs.dao.impl.params;
 import org.jskele.libs.dao.impl.DaoUtils;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 public interface ParameterExtractor {
 
@@ -20,4 +21,12 @@ public interface ParameterExtractor {
     Class<?>[] types();
 
     Object[] values(Object[] args);
+
+    default Class<?> getTypeOf(String paramName) {
+        int idIndex = Arrays.asList(names()).indexOf(paramName);
+        if (idIndex == -1) {
+            return null;
+        }
+        return types()[idIndex];
+    }
 }

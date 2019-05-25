@@ -1,11 +1,14 @@
 package org.jskele.libs.dao.impl;
 
+import org.jskele.libs.dao.impl.params.ParameterExtractor;
 import org.springframework.core.ResolvableType;
 
 import java.beans.ConstructorProperties;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -86,5 +89,20 @@ public class DaoUtils {
 
     public static boolean hasReturnType(Method method, Class<?> returnType) {
         return method.getReturnType().equals(returnType);
+    }
+
+    public static Map<String, Object> getParamValuesByName(Object[] args, ParameterExtractor extractor) {
+        String[] paramNames = extractor.names();
+        Object[] paramValues = extractor.values(args);
+        // Not using
+        // `IntStream.range(0, paramNames.length).boxed().collect(toMap(i -> paramNames[i], i -> paramValues[i]));`
+        // as it would throw NPE when value is null
+        Map<String, Object> paramValuesByName = new HashMap<>();
+        for (int i = 0; i < paramNames.length; i++) {
+            if (paramValuesByName.put(paramNames[i], paramValues[i]) != null) {
+                throw new IllegalStateException("Duplicate parameter name!");
+            }
+        }
+        return paramValuesByName;
     }
 }

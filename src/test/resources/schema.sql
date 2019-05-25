@@ -1,10 +1,12 @@
-CREATE TABLE test_table (
+CREATE TABLE test_table
+(
   id             BIGSERIAL PRIMARY KEY,
   string_column  TEXT,
   numeric_column INTEGER
 );
 
-CREATE TABLE test_table_with_uuid_id (
+CREATE TABLE test_table_with_uuid_id
+(
   id             UUID PRIMARY KEY,
   string_column  TEXT,
   numeric_column INTEGER

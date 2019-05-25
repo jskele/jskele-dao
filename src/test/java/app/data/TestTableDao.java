@@ -1,9 +1,10 @@
-package org.jskele.libs.data;
+package app.data;
 
-import java.util.List;
 import org.jskele.libs.dao.CrudDao;
 import org.jskele.libs.dao.Dao;
 import org.jskele.libs.dao.GenerateSql;
+
+import java.util.List;
 
 @Dao
 public interface TestTableDao extends CrudDao<TestTableRow, TestTableRowId> {

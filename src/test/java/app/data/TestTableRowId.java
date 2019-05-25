@@ -1,4 +1,4 @@
-package org.jskele.libs.data;
+package app.data;
 
 import org.jskele.libs.values.LongValue;
 
