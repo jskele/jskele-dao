@@ -2,14 +2,12 @@ package org.jskele.libs.dao.impl.invokers;
 
 import com.google.common.base.Preconditions;
 import lombok.RequiredArgsConstructor;
-import org.jskele.libs.dao.impl.DaoUtils;
 import org.jskele.libs.dao.impl.MethodDetails;
-import org.jskele.libs.dao.impl.mappers.ConstructorRowMapper;
-import org.jskele.libs.dao.impl.mappers.ConvertingSingleColumnRowMapper;
+import org.jskele.libs.dao.impl.mappers.RowMapperFactory;
 import org.jskele.libs.dao.impl.params.DaoSqlParameterSource;
 import org.jskele.libs.dao.impl.params.ParameterExtractor;
 import org.jskele.libs.dao.impl.sql.SqlSource;
-import org.springframework.core.convert.ConversionService;
+import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -18,6 +16,8 @@ import org.springframework.stereotype.Component;
 import javax.sql.DataSource;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.List;
+import java.util.function.Supplier;
 
 @Component
 @RequiredArgsConstructor
@@ -25,7 +25,7 @@ public class DaoInvokerFactory {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
     private final DataSource dataSource;
-    private final ConversionService conversionService;
+    private final RowMapperFactory rowMapperFactory;
 
     public DaoInvoker create(Method method, Class<?> daoClass) {
         MethodDetails details = new MethodDetails(method);
@@ -54,12 +54,13 @@ public class DaoInvokerFactory {
             };
         }
 
-        RowMapper<?> rowMapper = rowMapper(method, daoClass);
+        Supplier<RowMapper<?>> rowMapperSupplier = rowMapperFactory.createSupplier(method, daoClass);
 
         if (details.isQueryList()) {
             return args -> {
                 SqlParameterSource params = parameterSource(extractor, args);
                 String sql = sqlSource.generateSql(args);
+                RowMapper<?> rowMapper = rowMapperSupplier.get();
                 return jdbcTemplate.query(sql, params, rowMapper);
             };
         }
@@ -67,9 +68,10 @@ public class DaoInvokerFactory {
         return args -> {
             SqlParameterSource params = parameterSource(extractor, args);
             String sql = sqlSource.generateSql(args);
-            return jdbcTemplate.queryForObject(sql, params, rowMapper);
+            RowMapper<?> rowMapper = rowMapperSupplier.get();
+            List<?> results = jdbcTemplate.query(sql, params, rowMapper);
+            return DataAccessUtils.singleResult(results);
         };
-
     }
 
     private SqlParameterSource[] parameterSourceArray(ParameterExtractor extractor, Object[] args) {
@@ -94,16 +96,5 @@ public class DaoInvokerFactory {
         }
 
         return daoSqlParameterSource;
-    }
-
-
-    private RowMapper<?> rowMapper(Method method, Class<?> daoClass) {
-        Class<?> rowClass = DaoUtils.rowClass(method, daoClass);
-
-        if (DaoUtils.isBean(rowClass)) {
-            return new ConstructorRowMapper<>(rowClass, conversionService);
-        }
-
-        return new ConvertingSingleColumnRowMapper<>(rowClass, conversionService);
     }
 }
