@@ -39,10 +39,12 @@ jskele.dao.packages=com.package1,org.package2
 
 #### Specify database schema
 
-It is possible to specify database schema. It is applied to current and child interfaces generated SQL statements
-```
-@Dao(schema="myDatabaseSchema")
-```
+Database schema is resolved for each Dao class based using `DbSchemaResolver` bean.
+Add custom implementation of it to change default DB schema resolving if needed.
+By default
+`@Dao(schema="myDatabaseSchema")`
+can be used to set custom DB schema for single Dao class.
+
 
 ### Supported generated SQL statements
 

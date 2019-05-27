@@ -1,5 +1,6 @@
 package org.jskele.libs.dao.impl.sql;
 
+import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
 import com.google.common.reflect.Reflection;
 import com.mitchellbosecke.pebble.PebbleEngine;
@@ -8,6 +9,7 @@ import com.mitchellbosecke.pebble.loader.StringLoader;
 import com.mitchellbosecke.pebble.template.PebbleTemplate;
 import lombok.RequiredArgsConstructor;
 import org.jskele.libs.dao.SqlTemplate;
+import org.jskele.libs.dao.impl.DaoUtils;
 import org.jskele.libs.dao.impl.params.ParameterExtractor;
 
 import java.io.IOException;
@@ -17,9 +19,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.stream.IntStream;
 
-import static java.util.stream.Collectors.toMap;
 import static org.jskele.libs.dao.impl.DaoUtils.hasAnnotation;
 
 @RequiredArgsConstructor
@@ -58,14 +58,7 @@ class ClasspathSqlLoader {
         }
 
         return args -> {
-            String[] names = extractor.names();
-            Object[] values = extractor.values(args);
-
-            Map<String, Object> context = IntStream.range(0, names.length).boxed()
-                    .collect(toMap(
-                            i -> names[i],
-                            i -> values[i]
-                    ));
+            Map<String, Object> context = DaoUtils.getParamValuesByName(args, extractor);
 
             StringWriter writer = new StringWriter();
             try {
@@ -95,7 +88,10 @@ class ClasspathSqlLoader {
         String packageName = Reflection.getPackageName(declaringClass);
         String fileName = "/" + packageName.replace(".", "/") + "/" + methodName + "." + suffix;
 
-        return declaringClass.getResource(fileName);
+        URL resource = declaringClass.getResource(fileName);
+        Preconditions.checkState(resource != null, "Resource " + fileName + " doesn't exist in runtime classpath. " +
+                "If you want to keep sql files next to Dao interfaces instead of resources folder, then configure build tool to copy sql files to runtime classpath!");
+        return resource;
     }
 
     public boolean isTemplated() {

@@ -14,7 +14,7 @@ public class MethodDetails {
     }
 
     public boolean isInsertUpdateOrDelete() {
-        return hasReturnType(int.class);
+        return hasReturnType(int.class) || hasReturnType(void.class);
     }
 
     public boolean isBatchInsertOrUpdate() {
