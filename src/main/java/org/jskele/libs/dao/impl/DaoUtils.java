@@ -1,90 +1,95 @@
 package org.jskele.libs.dao.impl;
 
-import org.springframework.core.ResolvableType;
+import static com.google.common.base.Preconditions.checkArgument;
 
 import java.beans.ConstructorProperties;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-
-import static com.google.common.base.Preconditions.checkArgument;
+import org.springframework.core.ResolvableType;
 
 public class DaoUtils {
-    public static boolean isBean(Class<?> paramType) {
-        return beanConstructor(paramType) != null;
-    }
 
-    public static String[] beanProperties(Class<?> paramType) {
-        Constructor<?> constructor = beanConstructor(paramType);
-        if (constructor == null) {
-            return null;
-        }
+	public static boolean isBean(Class<?> paramType) {
+		return beanConstructor(paramType) != null;
+	}
 
-        return constructor.getAnnotation(ConstructorProperties.class).value();
-    }
+	public static String[] beanProperties(Class<?> paramType) {
+		Constructor<?> constructor = beanConstructor(paramType);
+		if (constructor == null) {
+			return null;
+		}
 
-    public static Constructor<?> beanConstructor(Class<?> beanClass) {
-        Constructor<?>[] constructors = beanClass.getConstructors();
+		return constructor.getAnnotation(ConstructorProperties.class).value();
+	}
 
-        Constructor<?> found = null;
+	public static Constructor<?> beanConstructor(Class<?> beanClass) {
+		Constructor<?>[] constructors = beanClass.getConstructors();
 
-        for (Constructor<?> constructor : constructors) {
-            ConstructorProperties annotation = constructor.getAnnotation(ConstructorProperties.class);
-            if (annotation == null) {
-                continue;
-            }
+		Constructor<?> found = null;
 
-            if (found != null) {
-                return null;
-            }
+		for (Constructor<?> constructor : constructors) {
+			ConstructorProperties annotation = constructor
+					.getAnnotation(ConstructorProperties.class);
+			if (annotation == null) {
+				continue;
+			}
 
-            found = constructor;
-        }
+			if (found != null) {
+				return null;
+			}
 
-        return found;
-    }
+			found = constructor;
+		}
 
-    public static Class<?> rowClass(Method method, Class<?> daoClass) {
-        ResolvableType resolvableType = ResolvableType.forMethodReturnType(method, daoClass);
+		return found;
+	}
 
-        if (resolvableType.hasGenerics()) {
-            ResolvableType[] generics = resolvableType.getGenerics();
-            checkArgument(generics.length == 1);
-            return generics[0].resolve();
-        }
+	public static Class<?> rowClass(Method method, Class<?> daoClass) {
+		ResolvableType resolvableType = ResolvableType.forMethodReturnType(method,
+				daoClass);
 
-        return resolvableType.resolve();
-    }
+		if (resolvableType.hasGenerics()) {
+			ResolvableType[] generics = resolvableType.getGenerics();
+			checkArgument(generics.length == 1);
+			return generics[0].resolve();
+		}
 
-    public static Class<?> beanClass(Method method, Class<?> daoClass) {
-        if (method.getParameterCount() != 1) {
-            return null;
-        }
+		return resolvableType.resolve();
+	}
 
-        ResolvableType resolvableType = ResolvableType.forMethodParameter(method, 0, daoClass);
+	public static Class<?> beanClass(Method method, Class<?> daoClass) {
+		if (method.getParameterCount() != 1) {
+			return null;
+		}
 
-        if (resolvableType.hasGenerics()) {
-            ResolvableType[] generics = resolvableType.getGenerics();
-            checkArgument(generics.length == 1);
-            return beanClass(generics[0].resolve());
-        }
+		ResolvableType resolvableType = ResolvableType.forMethodParameter(method, 0,
+				daoClass);
 
-        return beanClass(resolvableType.resolve());
-    }
+		if (resolvableType.hasGenerics()) {
+			ResolvableType[] generics = resolvableType.getGenerics();
+			checkArgument(generics.length == 1);
+			return beanClass(generics[0].resolve());
+		}
 
-    private static Class<?> beanClass(Class<?> potentialBeanClass) {
-        if (isBean(potentialBeanClass)) {
-            return potentialBeanClass;
-        }
+		return beanClass(resolvableType.resolve());
+	}
 
-        return null;
-    }
+	private static Class<?> beanClass(Class<?> potentialBeanClass) {
+		if (isBean(potentialBeanClass)) {
+			return potentialBeanClass;
+		}
 
-    public static boolean hasAnnotation(Method method, Class<? extends Annotation> annotationClass) {
-        return method.getAnnotation(annotationClass) != null;
-    }
+		return null;
+	}
 
-    public static boolean hasReturnType(Method method, Class<?> returnType) {
-        return method.getReturnType().equals(returnType);
-    }
+	public static boolean hasAnnotation(Method method,
+			Class<? extends Annotation> annotationClass) {
+		return method.getAnnotation(annotationClass) != null;
+	}
+
+	public static boolean hasReturnType(Method method, Class<?> returnType) {
+		return method.getReturnType().equals(returnType);
+	}
+
 }

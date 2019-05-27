@@ -1,15 +1,16 @@
 package org.jskele.libs.dao;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
 /**
- * When generating sql, don't update columns based on parameters, that are <code>null</code>
+ * When generating sql, don't update columns based on parameters, that are
+ * <code>null</code>
  */
-@Target({METHOD})
+@Target({ METHOD })
 @Retention(RUNTIME)
 public @interface ExcludeNulls {
 

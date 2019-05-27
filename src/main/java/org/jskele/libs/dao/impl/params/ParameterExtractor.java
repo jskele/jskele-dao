@@ -6,18 +6,19 @@ import java.lang.reflect.Method;
 
 public interface ParameterExtractor {
 
-    static ParameterExtractor create(Method method, Class<?> daoClass) {
-        Class<?> beanClass = DaoUtils.beanClass(method, daoClass);
-        if (beanClass != null) {
-            return BeanParameterExtractor.create(beanClass);
-        }
+	static ParameterExtractor create(Method method, Class<?> daoClass) {
+		Class<?> beanClass = DaoUtils.beanClass(method, daoClass);
+		if (beanClass != null) {
+			return BeanParameterExtractor.create(beanClass);
+		}
 
-        return ArgumentsParameterExtractor.create(method);
-    }
+		return ArgumentsParameterExtractor.create(method);
+	}
 
-    String[] names();
+	String[] names();
 
-    Class<?>[] types();
+	Class<?>[] types();
 
-    Object[] values(Object[] args);
+	Object[] values(Object[] args);
+
 }

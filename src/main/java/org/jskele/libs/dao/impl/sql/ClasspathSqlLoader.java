@@ -1,15 +1,14 @@
 package org.jskele.libs.dao.impl.sql;
 
+import static java.util.stream.Collectors.toMap;
+import static org.jskele.libs.dao.impl.DaoUtils.hasAnnotation;
+
 import com.google.common.io.Resources;
 import com.google.common.reflect.Reflection;
 import com.mitchellbosecke.pebble.PebbleEngine;
 import com.mitchellbosecke.pebble.error.PebbleException;
 import com.mitchellbosecke.pebble.loader.StringLoader;
 import com.mitchellbosecke.pebble.template.PebbleTemplate;
-import lombok.RequiredArgsConstructor;
-import org.jskele.libs.dao.SqlTemplate;
-import org.jskele.libs.dao.impl.params.ParameterExtractor;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UncheckedIOException;
@@ -18,87 +17,88 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.stream.IntStream;
-
-import static java.util.stream.Collectors.toMap;
-import static org.jskele.libs.dao.impl.DaoUtils.hasAnnotation;
+import lombok.RequiredArgsConstructor;
+import org.jskele.libs.dao.SqlTemplate;
+import org.jskele.libs.dao.impl.params.ParameterExtractor;
 
 @RequiredArgsConstructor
 class ClasspathSqlLoader {
-    private static final PebbleEngine TEMPLATE_ENGINE = new PebbleEngine
-            .Builder()
-            .loader(new StringLoader())
-            .autoEscaping(false)
-            .build();
 
+	private static final PebbleEngine TEMPLATE_ENGINE = new PebbleEngine.Builder()
+			.loader(new StringLoader()).autoEscaping(false).build();
 
-    private final Method method;
-    private final ParameterExtractor extractor;
+	private final Method method;
 
-    public SqlSource createSource() {
-        if (isTemplated()) {
-            return createDynamicSource();
-        }
+	private final ParameterExtractor extractor;
 
-        return createStaticSource();
-    }
+	public SqlSource createSource() {
+		if (isTemplated()) {
+			return createDynamicSource();
+		}
 
-    private SqlSource createStaticSource() {
-        String sqlString = loadAsString("sql");
+		return createStaticSource();
+	}
 
-        return args -> sqlString;
-    }
+	private SqlSource createStaticSource() {
+		String sqlString = loadAsString("sql");
 
-    private SqlSource createDynamicSource() {
-        String templateString = loadAsString("peb");
-        PebbleTemplate template;
-        try {
-            template = TEMPLATE_ENGINE.getTemplate(templateString);
-        } catch (PebbleException e) {
-            throw new RuntimeException(e);
-        }
+		return args -> sqlString;
+	}
 
-        return args -> {
-            String[] names = extractor.names();
-            Object[] values = extractor.values(args);
+	private SqlSource createDynamicSource() {
+		String templateString = loadAsString("peb");
+		PebbleTemplate template;
+		try {
+			template = TEMPLATE_ENGINE.getTemplate(templateString);
+		}
+		catch (PebbleException e) {
+			throw new RuntimeException(e);
+		}
 
-            Map<String, Object> context = IntStream.range(0, names.length).boxed()
-                    .collect(toMap(
-                            i -> names[i],
-                            i -> values[i]
-                    ));
+		return args -> {
+			String[] names = extractor.names();
+			Object[] values = extractor.values(args);
 
-            StringWriter writer = new StringWriter();
-            try {
-                template.evaluate(writer, context);
-            } catch (PebbleException e) {
-                throw new RuntimeException(e);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
+			Map<String, Object> context = IntStream.range(0, names.length).boxed()
+					.collect(toMap(i -> names[i], i -> values[i]));
 
-            return writer.toString();
-        };
-    }
+			StringWriter writer = new StringWriter();
+			try {
+				template.evaluate(writer, context);
+			}
+			catch (PebbleException e) {
+				throw new RuntimeException(e);
+			}
+			catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
 
-    public String loadAsString(String suffix) {
-        try {
-            return Resources.toString(resourceUrl(suffix), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+			return writer.toString();
+		};
+	}
 
-    private URL resourceUrl(String suffix) {
-        Class<?> declaringClass = method.getDeclaringClass();
+	public String loadAsString(String suffix) {
+		try {
+			return Resources.toString(resourceUrl(suffix), StandardCharsets.UTF_8);
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-        String methodName = method.getName();
-        String packageName = Reflection.getPackageName(declaringClass);
-        String fileName = "/" + packageName.replace(".", "/") + "/" + methodName + "." + suffix;
+	private URL resourceUrl(String suffix) {
+		Class<?> declaringClass = method.getDeclaringClass();
 
-        return declaringClass.getResource(fileName);
-    }
+		String methodName = method.getName();
+		String packageName = Reflection.getPackageName(declaringClass);
+		String fileName = "/" + packageName.replace(".", "/") + "/" + methodName + "."
+				+ suffix;
 
-    public boolean isTemplated() {
-        return hasAnnotation(method, SqlTemplate.class);
-    }
+		return declaringClass.getResource(fileName);
+	}
+
+	public boolean isTemplated() {
+		return hasAnnotation(method, SqlTemplate.class);
+	}
+
 }

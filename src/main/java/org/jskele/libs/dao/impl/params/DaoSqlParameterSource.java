@@ -19,67 +19,78 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class DaoSqlParameterSource extends MapSqlParameterSource {
 
-    private final DataSource dataSource;
+	private final DataSource dataSource;
 
-    @Override
-    public Object getValue(String paramName) throws IllegalArgumentException {
-        Object value = super.getValue(paramName);
+	@Override
+	public Object getValue(String paramName) throws IllegalArgumentException {
+		Object value = super.getValue(paramName);
 
-        if (value instanceof Instant) {
-            Instant instant = (Instant) value;
-            return new Timestamp(instant.toEpochMilli());
-        }
+		if (value instanceof Instant) {
+			Instant instant = (Instant) value;
+			return new Timestamp(instant.toEpochMilli());
+		}
 
-        if (value instanceof LocalDate) {
-            return Date.valueOf((LocalDate) value);
-        }
+		if (value instanceof LocalDate) {
+			return Date.valueOf((LocalDate) value);
+		}
 
-        if (value instanceof ValueClass) {
-            return ((ValueClass) value).toValue();
-        }
+		if (value instanceof ValueClass) {
+			return ((ValueClass) value).toValue();
+		}
 
-        if (value instanceof Enum) {
-            return value.toString();
-        }
+		if (value instanceof Enum) {
+			return value.toString();
+		}
 
-        if (value instanceof Collection) {
-            Collection collection = (Collection) value;
-            if (collection.isEmpty()) {
-                return null;
-            }
+		if (value instanceof Collection) {
+			Collection collection = (Collection) value;
+			if (collection.isEmpty()) {
+				return null;
+			}
 
-            try {
-                Object object = collection.iterator().next();
-                String typeName;
+			try {
+				Object object = collection.iterator().next();
+				String typeName;
 
-                if (object instanceof LocalDate) {
-                    typeName = "DATE";
-                } else if (object instanceof Enum) {
-                    typeName = "TEXT";
-                } else if (object instanceof String) {
-                    typeName = "TEXT";
-                } else if (object instanceof Long) {
-                    typeName = "NUMERIC";
-                } else if (object instanceof LongValue) {
-                    typeName = "BIGINT";
-                } else if (object instanceof StringValue) {
-                    typeName = "TEXT";
-                } else if (object instanceof UuidValue) {
-                    typeName = "UUID";
-                } else if (object == null) {
-                    typeName = "TEXT";
-                } else {
-                    throw new IllegalStateException("no typeName specified for " + object.getClass());
-                }
+				if (object instanceof LocalDate) {
+					typeName = "DATE";
+				}
+				else if (object instanceof Enum) {
+					typeName = "TEXT";
+				}
+				else if (object instanceof String) {
+					typeName = "TEXT";
+				}
+				else if (object instanceof Long) {
+					typeName = "NUMERIC";
+				}
+				else if (object instanceof LongValue) {
+					typeName = "BIGINT";
+				}
+				else if (object instanceof StringValue) {
+					typeName = "TEXT";
+				}
+				else if (object instanceof UuidValue) {
+					typeName = "UUID";
+				}
+				else if (object == null) {
+					typeName = "TEXT";
+				}
+				else {
+					throw new IllegalStateException(
+							"no typeName specified for " + object.getClass());
+				}
 
-                try (Connection connection = dataSource.getConnection()) {
-                    return connection.createArrayOf(typeName, collection.toArray());
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
+				try (Connection connection = dataSource.getConnection()) {
+					return connection.createArrayOf(typeName, collection.toArray());
+				}
+			}
+			catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+		}
 
-        return value;
-    }
+		return value;
+	}
+
 }

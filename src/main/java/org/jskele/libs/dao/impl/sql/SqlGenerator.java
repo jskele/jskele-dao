@@ -1,8 +1,18 @@
 package org.jskele.libs.dao.impl.sql;
 
+import static java.util.stream.Collectors.joining;
+import static org.jskele.libs.dao.impl.DaoUtils.hasAnnotation;
+
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Converter;
 import com.google.common.base.Preconditions;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.jskele.libs.dao.Dao;
@@ -12,246 +22,238 @@ import org.jskele.libs.dao.impl.params.ParameterExtractor;
 import org.jskele.libs.values.LongValue;
 import org.springframework.core.annotation.AnnotationUtils;
 
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.joining;
-import static org.jskele.libs.dao.impl.DaoUtils.hasAnnotation;
-
 @RequiredArgsConstructor
 class SqlGenerator {
-    private static final Converter<String, String> CONVERTER = CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
 
-    private final Class<?> daoClass;
-    private final Method method;
-    private final ParameterExtractor extractor;
+	private static final Converter<String, String> CONVERTER = CaseFormat.LOWER_CAMEL
+			.converterTo(CaseFormat.LOWER_UNDERSCORE);
 
-    public SqlSource createSource(boolean isBatchInsertOrUpdate) {
-        if (hasPrefix("delete")) {
-            return staticSqlSource(generateDelete());
-        }
+	private final Class<?> daoClass;
 
-        if (hasPrefix("insert")) {
-            return args -> generateInsert(args, isBatchInsertOrUpdate);
-        }
+	private final Method method;
 
-        if (hasPrefix("update")) {
-            return this::generateUpdate;
-        }
+	private final ParameterExtractor extractor;
 
-        if (hasPrefix("exists")) {
-            return staticSqlSource(generateExists());
-        }
+	public SqlSource createSource(boolean isBatchInsertOrUpdate) {
+		if (hasPrefix("delete")) {
+			return staticSqlSource(generateDelete());
+		}
 
-        if (hasPrefix("count")) {
-            return staticSqlSource(generateCount());
-        }
+		if (hasPrefix("insert")) {
+			return args -> generateInsert(args, isBatchInsertOrUpdate);
+		}
 
-        if (hasPrefix("selectForUpdate")) {
-            return staticSqlSource(generateSelectForUpdate());
-        }
+		if (hasPrefix("update")) {
+			return this::generateUpdate;
+		}
 
-        return staticSqlSource(generateSelect());
-    }
+		if (hasPrefix("exists")) {
+			return staticSqlSource(generateExists());
+		}
 
-    private SqlSource staticSqlSource(String sql) {
-        return args -> sql;
-    }
+		if (hasPrefix("count")) {
+			return staticSqlSource(generateCount());
+		}
 
-    private String generateUpdate(Object[] args) {
-        return "UPDATE " + tableName() + " SET " + updateColumns(args) + " WHERE id = :id";
-    }
+		if (hasPrefix("selectForUpdate")) {
+			return staticSqlSource(generateSelectForUpdate());
+		}
 
-    private String generateCount() {
-        return "SELECT count(*) FROM" + tableName() + whereCondition();
-    }
+		return staticSqlSource(generateSelect());
+	}
 
-    private String generateExists() {
-        return "SELECT EXISTS(SELECT 1 FROM " + tableName() + whereCondition() + ")";
-    }
+	private SqlSource staticSqlSource(String sql) {
+		return args -> sql;
+	}
 
-    private String generateInsert(Object[] args, boolean isBatchInsert) {
-        if (isBatchInsert) {
-            // XXX: same sql needs to be used for all batch rows - using first row to generate that SQL.
-            // NB! Note that it may be unexpected that for some consecutive row another SQL could be created
-            // (for example if first row has id set, but second row has no id, then id of second row would be ignored during insert and taken from sequence instead)
-            // As it will probably be fairly uncommon situation,
-            // then we don't support detecting that problem right now
-            // (or solving it by splitting single batch into multiple batch statements).
-            Collection<?> batchArgsList = (Collection) args[0];
-            Preconditions.checkState(!batchArgsList.isEmpty(), "Didn't expect empty collection for batch operation");
-            Object firstRowArgs = batchArgsList.iterator().next();
-            return generateInsert(new Object[]{firstRowArgs}, false);
-        }
-        Map<String, Object> paramValuesByName = getParamValuesByName(args);
-        return "INSERT INTO " + tableName() + " (" + insertColumns(paramValuesByName) + ")" +
-                " VALUES (" + insertValues(paramValuesByName) + ")" + insertReturning();
-    }
+	private String generateUpdate(Object[] args) {
+		return "UPDATE " + tableName() + " SET " + updateColumns(args)
+				+ " WHERE id = :id";
+	}
 
-    private String insertReturning() {
-        Class<?> idClass = getTypeOf("id");
-        if (idClass != null && (isNumericId(idClass) || method.getReturnType().isAssignableFrom(idClass))) {
-            return " RETURNING id";
-        }
+	private String generateCount() {
+		return "SELECT count(*) FROM" + tableName() + whereCondition();
+	}
 
-        return "";
-    }
+	private String generateExists() {
+		return "SELECT EXISTS(SELECT 1 FROM " + tableName() + whereCondition() + ")";
+	}
 
-    private String generateDelete() {
-        return "DELETE FROM " + tableName() + whereCondition();
-    }
+	private String generateInsert(Object[] args, boolean isBatchInsert) {
+		if (isBatchInsert) {
+			// XXX: same sql needs to be used for all batch rows - using first row to
+			// generate that SQL.
+			// NB! Note that it may be unexpected that for some consecutive row another
+			// SQL could be created
+			// (for example if first row has id set, but second row has no id, then id of
+			// second row would be ignored during insert and taken from sequence instead)
+			// As it will probably be fairly uncommon situation,
+			// then we don't support detecting that problem right now
+			// (or solving it by splitting single batch into multiple batch statements).
+			Collection<?> batchArgsList = (Collection) args[0];
+			Preconditions.checkState(!batchArgsList.isEmpty(),
+					"Didn't expect empty collection for batch operation");
+			Object firstRowArgs = batchArgsList.iterator().next();
+			return generateInsert(new Object[] { firstRowArgs }, false);
+		}
+		Map<String, Object> paramValuesByName = getParamValuesByName(args);
+		return "INSERT INTO " + tableName() + " (" + insertColumns(paramValuesByName)
+				+ ")" + " VALUES (" + insertValues(paramValuesByName) + ")"
+				+ insertReturning();
+	}
 
-    private String generateSelect() {
-        return "SELECT " + selectColumns() + " FROM " + tableName() + whereCondition();
-    }
+	private String insertReturning() {
+		Class<?> idClass = getTypeOf("id");
+		if (idClass != null && (isNumericId(idClass)
+				|| method.getReturnType().isAssignableFrom(idClass))) {
+			return " RETURNING id";
+		}
 
-    private String generateSelectForUpdate() {
-        return generateSelect() + " FOR UPDATE";
-    }
+		return "";
+	}
 
-    private String insertValues(Map<String, Object> paramValuesByName) {
-        return getParamNamesWithoutIdIfIdValueIsNull(paramValuesByName)
-                .map(name -> ":" + name)
-                .collect(joining(", "));
-    }
+	private String generateDelete() {
+		return "DELETE FROM " + tableName() + whereCondition();
+	}
 
-    private String updateColumns(Object[] args) {
-        String[] paramNames = updateParamNames(args);
+	private String generateSelect() {
+		return "SELECT " + selectColumns() + " FROM " + tableName() + whereCondition();
+	}
 
-        return Arrays.stream(paramNames)
-                .filter(name -> !name.equals("id"))
-                .map(this::columnEqualsParameter)
-                .collect(joining(", "));
-    }
+	private String generateSelectForUpdate() {
+		return generateSelect() + " FOR UPDATE";
+	}
 
-    private String[] updateParamNames(Object[] args) {
-        String[] names = extractor.names();
-        if (!hasAnnotation(method, ExcludeNulls.class)) {
-            return names;
-        }
+	private String insertValues(Map<String, Object> paramValuesByName) {
+		return getParamNamesWithoutIdIfIdValueIsNull(paramValuesByName)
+				.map(name -> ":" + name).collect(joining(", "));
+	}
 
-        return getParamNamesWithNotNullValues(names, args);
-    }
+	private String updateColumns(Object[] args) {
+		String[] paramNames = updateParamNames(args);
 
-    private String[] getParamNamesWithNotNullValues(String[] names, Object[] args) {
-        Object[] values = extractor.values(args);
+		return Arrays.stream(paramNames).filter(name -> !name.equals("id"))
+				.map(this::columnEqualsParameter).collect(joining(", "));
+	}
 
-        return IntStream.range(0, names.length)
-                .filter(i -> values[i] != null)
-                .mapToObj(i -> names[i])
-                .toArray(String[]::new);
-    }
+	private String[] updateParamNames(Object[] args) {
+		String[] names = extractor.names();
+		if (!hasAnnotation(method, ExcludeNulls.class)) {
+			return names;
+		}
 
-    private Stream<String> getParamNamesWithoutIdIfIdValueIsNull(Map<String, Object> paramValuesByName) {
-        return paramValuesByName.entrySet().stream()
-                .filter(entry -> isParamNameNotIdOrIdWithValue(entry.getKey(), entry.getValue()))
-                .map(Map.Entry::getKey);
-    }
+		return getParamNamesWithNotNullValues(names, args);
+	}
 
-    private Map<String, Object> getParamValuesByName(Object[] args) {
-        String[] paramNames = extractor.names();
-        Object[] values = extractor.values(args);
-        // Not using
-        // `IntStream.range(0, paramNames.length).boxed().collect(toMap(i -> paramNames[i], i -> values[i]));`
-        // as it would throw NPE when value is null
-        Map<String, Object> paramValuesByName = new HashMap<>();
-        for (int i = 0; i < paramNames.length; i++) {
-            if (paramValuesByName.put(paramNames[i], values[i]) != null) {
-                throw new IllegalStateException("Duplicate parameter name!");
-            }
-        }
-        return paramValuesByName;
-    }
+	private String[] getParamNamesWithNotNullValues(String[] names, Object[] args) {
+		Object[] values = extractor.values(args);
 
-    private boolean isParamNameNotIdOrIdWithValue(String paramName, Object paramValue) {
-        if ("id".equals(paramName)) {
-            return paramValue != null;
-        }
-        return true;
-    }
+		return IntStream.range(0, names.length).filter(i -> values[i] != null)
+				.mapToObj(i -> names[i]).toArray(String[]::new);
+	}
 
-    private String insertColumns(Map<String, Object> paramValuesByName) {
-        return getParamNamesWithoutIdIfIdValueIsNull(paramValuesByName)
-                .map(this::convert)
-                .map(this::esc)
-                .collect(joining(", "));
-    }
+	private Stream<String> getParamNamesWithoutIdIfIdValueIsNull(
+			Map<String, Object> paramValuesByName) {
+		return paramValuesByName.entrySet().stream().filter(
+				entry -> isParamNameNotIdOrIdWithValue(entry.getKey(), entry.getValue()))
+				.map(Map.Entry::getKey);
+	}
 
-    private String selectColumns() {
-        Class<?> rowClass = DaoUtils.rowClass(method, daoClass);
-        String[] columnNames = DaoUtils.beanProperties(rowClass);
+	private Map<String, Object> getParamValuesByName(Object[] args) {
+		String[] paramNames = extractor.names();
+		Object[] values = extractor.values(args);
+		// Not using
+		// `IntStream.range(0, paramNames.length).boxed().collect(toMap(i ->
+		// paramNames[i], i -> values[i]));`
+		// as it would throw NPE when value is null
+		Map<String, Object> paramValuesByName = new HashMap<>();
+		for (int i = 0; i < paramNames.length; i++) {
+			if (paramValuesByName.put(paramNames[i], values[i]) != null) {
+				throw new IllegalStateException("Duplicate parameter name!");
+			}
+		}
+		return paramValuesByName;
+	}
 
-        return Arrays.stream(columnNames)
-                .map(this::convert)
-                .map(this::esc)
-                .collect(joining(", "));
-    }
+	private boolean isParamNameNotIdOrIdWithValue(String paramName, Object paramValue) {
+		if ("id".equals(paramName)) {
+			return paramValue != null;
+		}
+		return true;
+	}
 
-    private String convert(String s) {
-        return CONVERTER.convert(s);
-    }
+	private String insertColumns(Map<String, Object> paramValuesByName) {
+		return getParamNamesWithoutIdIfIdValueIsNull(paramValuesByName).map(this::convert)
+				.map(this::esc).collect(joining(", "));
+	}
 
-    private String esc(String s) {
-        return '"' + s + '"';
-    }
+	private String selectColumns() {
+		Class<?> rowClass = DaoUtils.rowClass(method, daoClass);
+		String[] columnNames = DaoUtils.beanProperties(rowClass);
 
-    private String whereCondition() {
-        String[] paramNames = extractor.names();
+		return Arrays.stream(columnNames).map(this::convert).map(this::esc)
+				.collect(joining(", "));
+	}
 
-        if (paramNames.length == 0) {
-            return "";
-        }
+	private String convert(String s) {
+		return CONVERTER.convert(s);
+	}
 
-        String predicates = Arrays.stream(paramNames)
-                .map(this::columnEqualsParameter)
-                .collect(joining(" AND "));
+	private String esc(String s) {
+		return '"' + s + '"';
+	}
 
-        return " WHERE " + predicates;
-    }
+	private String whereCondition() {
+		String[] paramNames = extractor.names();
 
-    private String columnEqualsParameter(String name) {
-        return esc(convert(name)) + " = :" + name;
-    }
+		if (paramNames.length == 0) {
+			return "";
+		}
 
-    private String tableName() {
-        String daoName = daoClass.getSimpleName();
-        String camelTableName = StringUtils.removeEnd(daoName, "Dao");
+		String predicates = Arrays.stream(paramNames).map(this::columnEqualsParameter)
+				.collect(joining(" AND "));
 
-        String tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, camelTableName);
+		return " WHERE " + predicates;
+	}
 
-        Dao annotation = AnnotationUtils.findAnnotation(daoClass, Dao.class);
-        String schema = annotation.schema();
+	private String columnEqualsParameter(String name) {
+		return esc(convert(name)) + " = :" + name;
+	}
 
-        String prefix = StringUtils.isBlank(schema) ? "" : esc(schema) + ".";
-        return prefix + esc(tableName);
-    }
+	private String tableName() {
+		String daoName = daoClass.getSimpleName();
+		String camelTableName = StringUtils.removeEnd(daoName, "Dao");
 
-    private boolean hasPrefix(String prefix) {
-        return method.getName().startsWith(prefix);
-    }
+		String tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE,
+				camelTableName);
 
-    private boolean isNumericId(Class<?> idClass) {
-        if (LongValue.class.isAssignableFrom(idClass)) {
-            return true;
-        }
+		Dao annotation = AnnotationUtils.findAnnotation(daoClass, Dao.class);
+		String schema = annotation.schema();
 
-        return Number.class.isAssignableFrom(idClass);
-    }
+		String prefix = StringUtils.isBlank(schema) ? "" : esc(schema) + ".";
+		return prefix + esc(tableName);
+	}
 
-    private Class<?> getTypeOf(String paramName) {
-        int idIndex = Arrays.asList(extractor.names()).indexOf(paramName);
+	private boolean hasPrefix(String prefix) {
+		return method.getName().startsWith(prefix);
+	}
 
-        if (idIndex == -1) {
-            return null;
-        }
+	private boolean isNumericId(Class<?> idClass) {
+		if (LongValue.class.isAssignableFrom(idClass)) {
+			return true;
+		}
 
-        return extractor.types()[idIndex];
-    }
+		return Number.class.isAssignableFrom(idClass);
+	}
 
+	private Class<?> getTypeOf(String paramName) {
+		int idIndex = Arrays.asList(extractor.names()).indexOf(paramName);
+
+		if (idIndex == -1) {
+			return null;
+		}
+
+		return extractor.types()[idIndex];
+	}
 
 }

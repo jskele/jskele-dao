@@ -8,8 +8,9 @@ import org.springframework.core.convert.support.DefaultConversionService;
 @SpringBootApplication
 public class Application {
 
-    @Bean
-    ConversionService conversionService() {
-        return new DefaultConversionService();
-    }
+	@Bean
+	ConversionService conversionService() {
+		return new DefaultConversionService();
+	}
+
 }

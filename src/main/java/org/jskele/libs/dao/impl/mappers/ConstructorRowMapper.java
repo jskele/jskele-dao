@@ -1,7 +1,22 @@
 package org.jskele.libs.dao.impl.mappers;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.CaseFormat;
 import com.google.common.primitives.Primitives;
+import java.beans.ConstructorProperties;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.sql.Array;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.List;
+import java.util.Locale;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,201 +27,200 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.JdbcUtils;
 
-import java.beans.ConstructorProperties;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.sql.Array;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.*;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
 @Slf4j
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class ConstructorRowMapper<T> implements RowMapper<T> {
 
-    public ConstructorRowMapper(Class<T> rowClass) {
-        this(findConstructor(rowClass), new DefaultConversionService());
-    }
+	public ConstructorRowMapper(Class<T> rowClass) {
+		this(findConstructor(rowClass), new DefaultConversionService());
+	}
 
-    public ConstructorRowMapper(Class<T> rowClass, ConversionService conversionService) {
-        this(findConstructor(rowClass), conversionService);
-    }
+	public ConstructorRowMapper(Class<T> rowClass, ConversionService conversionService) {
+		this(findConstructor(rowClass), conversionService);
+	}
 
-    private ConstructorRowMapper(Constructor<T> constructor, ConversionService conversionService) {
-        this(
-                constructor,
-                constructor.getParameterTypes(),
-                constructor.getAnnotation(ConstructorProperties.class).value(),
-                conversionService);
-    }
+	private ConstructorRowMapper(Constructor<T> constructor,
+			ConversionService conversionService) {
+		this(constructor, constructor.getParameterTypes(),
+				constructor.getAnnotation(ConstructorProperties.class).value(),
+				conversionService);
+	}
 
-    private final Constructor<T> constructor;
-    private final Class<?>[] parameterTypes;
-    private final String[] parameterNames;
-    private final ConversionService conversionService;
+	private final Constructor<T> constructor;
 
-    private int[] columnIndexes;
+	private final Class<?>[] parameterTypes;
 
-    @Override
-    public T mapRow(ResultSet rs, int rowNum) throws SQLException {
-        if (columnIndexes == null) {
-            columnIndexes = createParameterToColumnMap(rs.getMetaData(), parameterNames);
-        }
+	private final String[] parameterNames;
 
-        Object[] arguments = getArguments(rs, columnIndexes);
+	private final ConversionService conversionService;
 
-        try {
-            return constructor.newInstance(arguments);
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
-    }
+	private int[] columnIndexes;
 
-    private int[] createParameterToColumnMap(ResultSetMetaData metaData, String[] parameterNames) throws SQLException {
-        int columnCount = metaData.getColumnCount();
-        int parameterCount = parameterNames.length;
+	@Override
+	public T mapRow(ResultSet rs, int rowNum) throws SQLException {
+		if (columnIndexes == null) {
+			columnIndexes = createParameterToColumnMap(rs.getMetaData(), parameterNames);
+		}
 
-        BitSet mappedParameters = new BitSet();
-        BitSet mappedColumns = new BitSet();
+		Object[] arguments = getArguments(rs, columnIndexes);
 
-        int[] columnIndexes = new int[parameterCount];
-        for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
-            String parameterName = getParameterNameForColumn(metaData, columnIndex);
-            int parameterIndex = findParameterIndex(parameterNames, parameterName);
-            if (parameterIndex != -1) {
-                columnIndexes[parameterIndex] = columnIndex;
-                mappedParameters.set(parameterIndex);
-                mappedColumns.set(columnIndex);
-            }
-        }
+		try {
+			return constructor.newInstance(arguments);
+		}
+		catch (InstantiationException | IllegalAccessException
+				| InvocationTargetException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-        checkFullyPopulated(mappedParameters, parameterCount, mappedColumns, columnCount, metaData);
+	private int[] createParameterToColumnMap(ResultSetMetaData metaData,
+			String[] parameterNames) throws SQLException {
+		int columnCount = metaData.getColumnCount();
+		int parameterCount = parameterNames.length;
 
-        return columnIndexes;
-    }
+		BitSet mappedParameters = new BitSet();
+		BitSet mappedColumns = new BitSet();
 
-    private void checkFullyPopulated(
-            BitSet mappedParameters,
-            int parameterCount,
-            BitSet mappedColumns,
-            int columnCount,
-            ResultSetMetaData metaData) throws SQLException {
+		int[] columnIndexes = new int[parameterCount];
+		for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
+			String parameterName = getParameterNameForColumn(metaData, columnIndex);
+			int parameterIndex = findParameterIndex(parameterNames, parameterName);
+			if (parameterIndex != -1) {
+				columnIndexes[parameterIndex] = columnIndex;
+				mappedParameters.set(parameterIndex);
+				mappedColumns.set(columnIndex);
+			}
+		}
 
-        int mappedParameterCount = mappedParameters.cardinality();
-        int mappedColumnCount = mappedColumns.cardinality();
-        if (mappedParameterCount == parameterCount && mappedColumnCount == columnCount) {
-            return;
-        }
+		checkFullyPopulated(mappedParameters, parameterCount, mappedColumns, columnCount,
+				metaData);
 
-        List<String> missingParameters = new ArrayList<>(parameterCount - mappedParameterCount);
-        for (int i = mappedParameters.nextClearBit(0); i < parameterCount; i = mappedParameters.nextClearBit(i + 1)) {
-            missingParameters.add(parameterNames[i]);
-        }
+		return columnIndexes;
+	}
 
-        List<String> excessColumns = new ArrayList<>(columnCount - mappedColumnCount);
-        for (int i = mappedColumns.nextClearBit(1); i <= columnCount; i = mappedColumns.nextClearBit(i + 1)) {
-            excessColumns.add(getParameterNameForColumn(metaData, i));
-        }
+	private void checkFullyPopulated(BitSet mappedParameters, int parameterCount,
+			BitSet mappedColumns, int columnCount, ResultSetMetaData metaData)
+			throws SQLException {
 
-        String msg = String.format("%s: no 1-to-1 mapping from ResultSet", constructor.getDeclaringClass().getSimpleName());
+		int mappedParameterCount = mappedParameters.cardinality();
+		int mappedColumnCount = mappedColumns.cardinality();
+		if (mappedParameterCount == parameterCount && mappedColumnCount == columnCount) {
+			return;
+		}
 
-        if (!missingParameters.isEmpty()) {
-            msg += String.format(", missing properties: %s", missingParameters);
-        }
+		List<String> missingParameters = new ArrayList<>(
+				parameterCount - mappedParameterCount);
+		for (int i = mappedParameters.nextClearBit(
+				0); i < parameterCount; i = mappedParameters.nextClearBit(i + 1)) {
+			missingParameters.add(parameterNames[i]);
+		}
 
-        if (!excessColumns.isEmpty()) {
-            msg += String.format(", excess columns: %s", excessColumns);
-        }
+		List<String> excessColumns = new ArrayList<>(columnCount - mappedColumnCount);
+		for (int i = mappedColumns.nextClearBit(1); i <= columnCount; i = mappedColumns
+				.nextClearBit(i + 1)) {
+			excessColumns.add(getParameterNameForColumn(metaData, i));
+		}
 
-        throw new IllegalStateException(msg);
-    }
+		String msg = String.format("%s: no 1-to-1 mapping from ResultSet",
+				constructor.getDeclaringClass().getSimpleName());
 
-    private String getParameterNameForColumn(ResultSetMetaData metaData, int columnIndex) throws SQLException {
-        String columnName = JdbcUtils.lookupColumnName(metaData, columnIndex);
-        String lowerUnderscore = columnName.toLowerCase(Locale.US);
-        String lowerCamel = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, lowerUnderscore);
-        return lowerCamel;
-    }
+		if (!missingParameters.isEmpty()) {
+			msg += String.format(", missing properties: %s", missingParameters);
+		}
 
-    private int findParameterIndex(String[] parameterNames, String columnName) {
-        return Arrays.asList(parameterNames).indexOf(columnName);
-    }
+		if (!excessColumns.isEmpty()) {
+			msg += String.format(", excess columns: %s", excessColumns);
+		}
 
-    private Object[] getArguments(ResultSet rs, int[] columnIndexes) throws SQLException {
-        int parameterCount = parameterTypes.length;
-        Object[] arguments = new Object[parameterCount];
-        for (int parameterIndex = 0; parameterIndex < parameterCount; parameterIndex++) {
-            int columnIndex = columnIndexes[parameterIndex];
-            if (columnIndex != 0) {
-                Object argument = getColumnValue(rs, columnIndex, parameterIndex);
-                arguments[parameterIndex] = argument;
-            }
-        }
-        return arguments;
-    }
+		throw new IllegalStateException(msg);
+	}
 
-    private Object getColumnValue(ResultSet rs, int columnIndex, int parameterIndex) throws SQLException {
-        Class<?> parameterType = parameterTypes[parameterIndex];
-        Object value = JdbcUtils.getResultSetValue(rs, columnIndex, parameterType);
+	private String getParameterNameForColumn(ResultSetMetaData metaData, int columnIndex)
+			throws SQLException {
+		String columnName = JdbcUtils.lookupColumnName(metaData, columnIndex);
+		String lowerUnderscore = columnName.toLowerCase(Locale.US);
+		String lowerCamel = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL,
+				lowerUnderscore);
+		return lowerCamel;
+	}
 
-        if (value == null) {
-            checkState(!parameterType.isPrimitive(),
-                    "cannot map null value to to primitive %s %s, "
-                            + "please consider using NOT NULL constraints on columns that map to primitives or use wrapper classes",
-                    parameterType,
-                    getParameterNameForColumn(rs.getMetaData(), columnIndex));
+	private int findParameterIndex(String[] parameterNames, String columnName) {
+		return Arrays.asList(parameterNames).indexOf(columnName);
+	}
 
-            return null;
-        }
+	private Object[] getArguments(ResultSet rs, int[] columnIndexes) throws SQLException {
+		int parameterCount = parameterTypes.length;
+		Object[] arguments = new Object[parameterCount];
+		for (int parameterIndex = 0; parameterIndex < parameterCount; parameterIndex++) {
+			int columnIndex = columnIndexes[parameterIndex];
+			if (columnIndex != 0) {
+				Object argument = getColumnValue(rs, columnIndex, parameterIndex);
+				arguments[parameterIndex] = argument;
+			}
+		}
+		return arguments;
+	}
 
-        if (value instanceof Array) {
-            Object array = ((Array) value).getArray();
-            TypeDescriptor sourceType = TypeDescriptor.valueOf(array.getClass());
-            TypeDescriptor targetType = new TypeDescriptor(new MethodParameter(constructor, parameterIndex));
-            return conversionService.convert(array, sourceType, targetType);
-        }
+	private Object getColumnValue(ResultSet rs, int columnIndex, int parameterIndex)
+			throws SQLException {
+		Class<?> parameterType = parameterTypes[parameterIndex];
+		Object value = JdbcUtils.getResultSetValue(rs, columnIndex, parameterType);
 
-        // perf: because value is always a object, wrap primitives to avoid unnecessary calls to conversionService
-        // increased performance form +6.5% to +5% compared to a custom row mapper
-        Class<?> wrappedType = Primitives.wrap(parameterType);
+		if (value == null) {
+			checkState(!parameterType.isPrimitive(),
+					"cannot map null value to to primitive %s %s, "
+							+ "please consider using NOT NULL constraints on columns that map to primitives or use wrapper classes",
+					parameterType,
+					getParameterNameForColumn(rs.getMetaData(), columnIndex));
 
-        if (!wrappedType.isInstance(value)) {
-            return conversionService.convert(value, parameterType);
-        }
+			return null;
+		}
 
-        return value;
-    }
+		if (value instanceof Array) {
+			Object array = ((Array) value).getArray();
+			TypeDescriptor sourceType = TypeDescriptor.valueOf(array.getClass());
+			TypeDescriptor targetType = new TypeDescriptor(
+					new MethodParameter(constructor, parameterIndex));
+			return conversionService.convert(array, sourceType, targetType);
+		}
 
-    static <T> Constructor<T> findConstructor(Class<T> rowClass) {
-        Constructor<?>[] constructors = rowClass.getConstructors();
+		// perf: because value is always a object, wrap primitives to avoid unnecessary
+		// calls to conversionService
+		// increased performance form +6.5% to +5% compared to a custom row mapper
+		Class<?> wrappedType = Primitives.wrap(parameterType);
 
-        Constructor<?> annotatedConstructor = null;
-        for (Constructor<?> constructor : constructors) {
-            ConstructorProperties annotation = constructor.getAnnotation(ConstructorProperties.class);
-            if (annotation == null) {
-                continue;
-            }
+		if (!wrappedType.isInstance(value)) {
+			return conversionService.convert(value, parameterType);
+		}
 
-            checkArgument(
-                    annotatedConstructor == null,
-                    "rowClass %s has more than one constructor annotated with @ConstructorProperties",
-                    rowClass);
+		return value;
+	}
 
-            annotatedConstructor = constructor;
-        }
+	static <T> Constructor<T> findConstructor(Class<T> rowClass) {
+		Constructor<?>[] constructors = rowClass.getConstructors();
 
-        checkArgument(
-                annotatedConstructor != null,
-                "rowClass %s has no constructors annotated with @ConstructorProperties",
-                rowClass);
+		Constructor<?> annotatedConstructor = null;
+		for (Constructor<?> constructor : constructors) {
+			ConstructorProperties annotation = constructor
+					.getAnnotation(ConstructorProperties.class);
+			if (annotation == null) {
+				continue;
+			}
 
-        @SuppressWarnings("unchecked")
-        Constructor<T> constructor = (Constructor<T>) annotatedConstructor;
-        return constructor;
-    }
+			checkArgument(annotatedConstructor == null,
+					"rowClass %s has more than one constructor annotated with @ConstructorProperties",
+					rowClass);
+
+			annotatedConstructor = constructor;
+		}
+
+		checkArgument(annotatedConstructor != null,
+				"rowClass %s has no constructors annotated with @ConstructorProperties",
+				rowClass);
+
+		@SuppressWarnings("unchecked")
+		Constructor<T> constructor = (Constructor<T>) annotatedConstructor;
+		return constructor;
+	}
 
 }

@@ -9,13 +9,14 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 class DaoFactory {
 
-    static final String BEAN_NAME = "daoFactory";
-    static final String METHOD_NAME = "create";
+	static final String BEAN_NAME = "daoFactory";
+	static final String METHOD_NAME = "create";
 
-    private final DaoInvokerFactory invokerFactory;
+	private final DaoInvokerFactory invokerFactory;
 
-    public <T> T create(Class<T> daoClass) {
-        DaoInvocationHandler handler = new DaoInvocationHandler(invokerFactory, daoClass);
-        return Reflection.newProxy(daoClass, handler);
-    }
+	public <T> T create(Class<T> daoClass) {
+		DaoInvocationHandler handler = new DaoInvocationHandler(invokerFactory, daoClass);
+		return Reflection.newProxy(daoClass, handler);
+	}
+
 }

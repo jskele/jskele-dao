@@ -8,10 +8,10 @@ import java.lang.annotation.Target;
 import org.springframework.stereotype.Indexed;
 
 @Indexed
-@Target({TYPE})
+@Target({ TYPE })
 @Retention(RUNTIME)
 public @interface Dao {
 
-  String schema() default "";
+	String schema() default "";
 
 }

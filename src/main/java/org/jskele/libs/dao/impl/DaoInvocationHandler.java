@@ -12,18 +12,18 @@ import java.util.Map;
 @RequiredArgsConstructor
 class DaoInvocationHandler extends AbstractInvocationHandler {
 
-    private final DaoInvokerFactory invokerFactory;
-    private final Map<Method, DaoInvoker> invokerMap = Maps.newHashMap();
-    private final Class<?> daoClass;
+	private final DaoInvokerFactory invokerFactory;
 
-    @Override
-    protected Object handleInvocation(Object proxy, Method method, Object[] args) {
-        DaoInvoker invoker = invokerMap.computeIfAbsent(
-                method,
-                m -> invokerFactory.create(m, daoClass)
-        );
+	private final Map<Method, DaoInvoker> invokerMap = Maps.newHashMap();
 
-        return invoker.invoke(args);
-    }
+	private final Class<?> daoClass;
+
+	@Override
+	protected Object handleInvocation(Object proxy, Method method, Object[] args) {
+		DaoInvoker invoker = invokerMap.computeIfAbsent(method,
+				m -> invokerFactory.create(m, daoClass));
+
+		return invoker.invoke(args);
+	}
 
 }

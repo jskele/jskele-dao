@@ -8,17 +8,19 @@ import org.jskele.libs.dao.GenerateSql;
 @Dao
 public interface TestTableDao extends CrudDao<TestTableRow, TestTableRowId> {
 
-    @GenerateSql
-    List<TestTableRow> selectAll();
+	@GenerateSql
+	List<TestTableRow> selectAll();
 
-    @GenerateSql
-    int[] insertBatch(List<TestTableRow> rows);
+	@GenerateSql
+	int[] insertBatch(List<TestTableRow> rows);
 
-    @GenerateSql
-    int[] updateBatch(List<TestTableRow> rows);
+	@GenerateSql
+	int[] updateBatch(List<TestTableRow> rows);
 
-    @GenerateSql
-    TestTableRow selectForUpdate(TestTableRowId id);
+	@GenerateSql
+	TestTableRow selectForUpdate(TestTableRowId id);
 
-    List<TestTableRow> findByNumericColumnIn(String excludedValue, List<Long> numericColumns);
+	List<TestTableRow> findByNumericColumnIn(String excludedValue,
+			List<Long> numericColumns);
+
 }

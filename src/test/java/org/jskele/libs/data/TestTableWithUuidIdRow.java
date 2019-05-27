@@ -10,8 +10,10 @@ import org.jskele.libs.dao.EntityRow;
 @RequiredArgsConstructor
 public class TestTableWithUuidIdRow implements EntityRow<TestTableWithUuidIdRowId> {
 
-    private final TestTableWithUuidIdRowId id;
-    private final String stringColumn;
-    private final Integer numericColumn;
+	private final TestTableWithUuidIdRowId id;
+
+	private final String stringColumn;
+
+	private final Integer numericColumn;
 
 }

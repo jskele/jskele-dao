@@ -23,87 +23,93 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class DaoInvokerFactory {
 
-    private final NamedParameterJdbcTemplate jdbcTemplate;
-    private final DataSource dataSource;
-    private final ConversionService conversionService;
+	private final NamedParameterJdbcTemplate jdbcTemplate;
 
-    public DaoInvoker create(Method method, Class<?> daoClass) {
-        MethodDetails details = new MethodDetails(method);
+	private final DataSource dataSource;
 
-        ParameterExtractor extractor = ParameterExtractor.create(method, daoClass);
-        Preconditions.checkState(extractor.names() != null,
-                "Parameter names for generating SQL base based on %s can't be resolved. Try adding compiler arguments `-parameters`",
-                method);
+	private final ConversionService conversionService;
 
-        boolean isBatchInsertOrUpdate = details.isBatchUpdate();
-        SqlSource sqlSource = SqlSource.create(daoClass, method, extractor, isBatchInsertOrUpdate);
+	public DaoInvoker create(Method method, Class<?> daoClass) {
+		MethodDetails details = new MethodDetails(method);
 
-        if (details.isUpdate()) {
-            return args -> {
-                SqlParameterSource params = parameterSource(extractor, args);
-                String sql = sqlSource.generateSql(args);
-                return jdbcTemplate.update(sql, params);
-            };
-        }
+		ParameterExtractor extractor = ParameterExtractor.create(method, daoClass);
+		Preconditions.checkState(extractor.names() != null,
+				"Parameter names for generating SQL base based on %s can't be resolved. Try adding compiler arguments `-parameters`",
+				method);
 
-        if (isBatchInsertOrUpdate) {
-            return args -> {
-                SqlParameterSource[] paramsArray = parameterSourceArray(extractor, args);
-                String sql = sqlSource.generateSql(args);
-                return jdbcTemplate.batchUpdate(sql, paramsArray);
-            };
-        }
+		boolean isBatchInsertOrUpdate = details.isBatchUpdate();
+		SqlSource sqlSource = SqlSource.create(daoClass, method, extractor,
+				isBatchInsertOrUpdate);
 
-        RowMapper<?> rowMapper = rowMapper(method, daoClass);
+		if (details.isUpdate()) {
+			return args -> {
+				SqlParameterSource params = parameterSource(extractor, args);
+				String sql = sqlSource.generateSql(args);
+				return jdbcTemplate.update(sql, params);
+			};
+		}
 
-        if (details.isQueryList()) {
-            return args -> {
-                SqlParameterSource params = parameterSource(extractor, args);
-                String sql = sqlSource.generateSql(args);
-                return jdbcTemplate.query(sql, params, rowMapper);
-            };
-        }
+		if (isBatchInsertOrUpdate) {
+			return args -> {
+				SqlParameterSource[] paramsArray = parameterSourceArray(extractor, args);
+				String sql = sqlSource.generateSql(args);
+				return jdbcTemplate.batchUpdate(sql, paramsArray);
+			};
+		}
 
-        return args -> {
-            SqlParameterSource params = parameterSource(extractor, args);
-            String sql = sqlSource.generateSql(args);
-            return jdbcTemplate.queryForObject(sql, params, rowMapper);
-        };
+		RowMapper<?> rowMapper = rowMapper(method, daoClass);
 
-    }
+		if (details.isQueryList()) {
+			return args -> {
+				SqlParameterSource params = parameterSource(extractor, args);
+				String sql = sqlSource.generateSql(args);
+				return jdbcTemplate.query(sql, params, rowMapper);
+			};
+		}
 
-    private SqlParameterSource[] parameterSourceArray(ParameterExtractor extractor, Object[] args) {
-        Collection<?> collection = (Collection<?>) args[0];
+		return args -> {
+			SqlParameterSource params = parameterSource(extractor, args);
+			String sql = sqlSource.generateSql(args);
+			return jdbcTemplate.queryForObject(sql, params, rowMapper);
+		};
 
-        return collection.stream()
-                .map(arg -> parameterSource(extractor, new Object[]{arg}))
-                .toArray(SqlParameterSource[]::new);
-    }
+	}
 
-    private SqlParameterSource parameterSource(ParameterExtractor extractor, Object[] args) {
-        DaoSqlParameterSource daoSqlParameterSource = new DaoSqlParameterSource(dataSource);
+	private SqlParameterSource[] parameterSourceArray(ParameterExtractor extractor,
+			Object[] args) {
+		Collection<?> collection = (Collection<?>) args[0];
 
-        String[] names = extractor.names();
-        Object[] values = extractor.values(args);
+		return collection.stream()
+				.map(arg -> parameterSource(extractor, new Object[] { arg }))
+				.toArray(SqlParameterSource[]::new);
+	}
 
-        for (int i = 0; i < names.length; i++) {
-            String name = names[i];
-            Object value = values[i];
+	private SqlParameterSource parameterSource(ParameterExtractor extractor,
+			Object[] args) {
+		DaoSqlParameterSource daoSqlParameterSource = new DaoSqlParameterSource(
+				dataSource);
 
-            daoSqlParameterSource.addValue(name, value);
-        }
+		String[] names = extractor.names();
+		Object[] values = extractor.values(args);
 
-        return daoSqlParameterSource;
-    }
+		for (int i = 0; i < names.length; i++) {
+			String name = names[i];
+			Object value = values[i];
 
+			daoSqlParameterSource.addValue(name, value);
+		}
 
-    private RowMapper<?> rowMapper(Method method, Class<?> daoClass) {
-        Class<?> rowClass = DaoUtils.rowClass(method, daoClass);
+		return daoSqlParameterSource;
+	}
 
-        if (DaoUtils.isBean(rowClass)) {
-            return new ConstructorRowMapper<>(rowClass, conversionService);
-        }
+	private RowMapper<?> rowMapper(Method method, Class<?> daoClass) {
+		Class<?> rowClass = DaoUtils.rowClass(method, daoClass);
 
-        return new ConvertingSingleColumnRowMapper<>(rowClass, conversionService);
-    }
+		if (DaoUtils.isBean(rowClass)) {
+			return new ConstructorRowMapper<>(rowClass, conversionService);
+		}
+
+		return new ConvertingSingleColumnRowMapper<>(rowClass, conversionService);
+	}
+
 }

@@ -7,22 +7,23 @@ import java.util.List;
 
 @RequiredArgsConstructor
 public class MethodDetails {
-    private final Method method;
 
-    public boolean isQueryList() {
-        return hasReturnType(List.class);
-    }
+	private final Method method;
 
-    public boolean isUpdate() {
-        return hasReturnType(int.class);
-    }
+	public boolean isQueryList() {
+		return hasReturnType(List.class);
+	}
 
-    public boolean isBatchUpdate() {
-        return hasReturnType(int[].class);
-    }
+	public boolean isUpdate() {
+		return hasReturnType(int.class);
+	}
 
-    private boolean hasReturnType(Class<?> returnType) {
-        return DaoUtils.hasReturnType(method, returnType);
-    }
+	public boolean isBatchUpdate() {
+		return hasReturnType(int[].class);
+	}
+
+	private boolean hasReturnType(Class<?> returnType) {
+		return DaoUtils.hasReturnType(method, returnType);
+	}
 
 }
