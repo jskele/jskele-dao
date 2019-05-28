@@ -44,7 +44,7 @@ public class MapperUtils {
     private static Object tryGetValue(ResultSet rs, int index, Class<?> valueType) throws SQLException {
         try {
             return JdbcUtils.getResultSetValue(rs, index, valueType);
-        } catch (Exception e) {
+        } catch (ClassCastException | SQLException e) {
             // If getting the value as `valueType` fails, then fall back to string and let conversionService handle it.
             // This can happen for example if column type is 'text' but contains UUIDs and valueType is 'UUID.class',
             // then an ClassCastException will be thrown from Postgres JDBC driver.
