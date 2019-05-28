@@ -65,7 +65,6 @@ dependencies {
             'org.jskele:lib-values:1.0',
 
             'com.mitchellbosecke:pebble:2.4.0',
-            'org.postgresql:postgresql',
     )
 
     testAnnotationProcessor(
@@ -84,6 +83,7 @@ dependencies {
     )
 
     testRuntime(
+            'org.postgresql:postgresql',
             'org.springframework.boot:spring-boot-starter-logging',
     )
 

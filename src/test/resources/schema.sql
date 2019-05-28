@@ -12,3 +12,8 @@ CREATE TABLE test_table_with_uuid_id
   string_column  TEXT,
   numeric_column INTEGER
 );
+
+CREATE TABLE test_uuid_as_text
+(
+    uuid_text TEXT PRIMARY KEY
+)

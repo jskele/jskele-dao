@@ -3,17 +3,19 @@ package org.jskele.libs.dao.impl.mappers;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.SingleColumnRowMapper;
 
-public class ConvertingSingleColumnRowMapper<T> extends SingleColumnRowMapper<T> {
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
-    private final ConversionService conversionService;
+public class ConvertingSingleColumnRowMapper<T> extends SingleColumnRowMapper<T> {
 
     public ConvertingSingleColumnRowMapper(Class<T> requiredType, ConversionService conversionService) {
         super(requiredType);
-        this.conversionService = conversionService;
+        this.setConversionService(conversionService);
     }
 
     @Override
-    protected Object convertValueToRequiredType(Object value, Class<?> requiredType) {
-        return conversionService.convert(value, requiredType);
+    protected Object getColumnValue(ResultSet rs, int index, Class<?> requiredType)
+        throws SQLException {
+        return MapperUtils.getResultSetValue(rs, index, requiredType);
     }
 }

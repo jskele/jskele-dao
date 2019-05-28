@@ -146,7 +146,7 @@ public class ConstructorRowMapper<T> implements RowMapper<T> {
 
     private Object getColumnValue(ResultSet rs, int columnIndex, int parameterIndex) throws SQLException {
         Class<?> parameterType = parameterTypes[parameterIndex];
-        Object value = JdbcUtils.getResultSetValue(rs, columnIndex, parameterType);
+        Object value = MapperUtils.getResultSetValue(rs, columnIndex, parameterType);
 
         if (value == null) {
             checkState(!parameterType.isPrimitive(),
