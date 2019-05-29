@@ -2,7 +2,7 @@ package app.data;
 
 import lombok.*;
 import org.jskele.libs.dao.EntityRow;
-import org.jskele.libs.dao.JsonValue;
+import org.jskele.libs.values.StringValue;
 
 @Getter
 @Builder(toBuilder = true)
@@ -16,7 +16,7 @@ public class TestTableRow implements EntityRow<TestTableRowId> {
     private final Integer numericColumn;
     private final JsonColumn jsonColumn;
 
-    public static class JsonColumn extends JsonValue {
+    public static class JsonColumn extends StringValue {
         public JsonColumn(String value) {
             super(value);
         }
