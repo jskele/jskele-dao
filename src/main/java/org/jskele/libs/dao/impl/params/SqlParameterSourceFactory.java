@@ -10,10 +10,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collection;
@@ -44,7 +41,15 @@ public class SqlParameterSourceFactory {
 
             Object sqlValue = sqlValue(value);
 
-            parameterSource.addValue(name, sqlValue);
+            if (sqlValue instanceof String) {
+                // Setting the parameter type of strings to `OTHER` will have the same effect as
+                // the jdbc connection parameter `stringtype=unspecified`.
+                // This moves the type detection and conversion to the server side, allowing us to use
+                // non-standard types like `uuid` and `json` without any casting in SQLs or using PGObject values.
+                parameterSource.addValue(name, sqlValue, Types.OTHER);
+            } else {
+                parameterSource.addValue(name, sqlValue);
+            }
         }
 
         return parameterSource;
