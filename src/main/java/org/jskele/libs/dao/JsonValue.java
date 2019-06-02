@@ -1,6 +1,6 @@
 package org.jskele.libs.dao;
 
-import org.jskele.libs.values.StringValue;
+import org.jskele.values.StringValue;
 
 /**
  * JSON columns need special converting -

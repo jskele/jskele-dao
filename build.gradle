@@ -29,6 +29,7 @@ artifacts {
 repositories {
     mavenCentral()
     jcenter()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencyManagement {
@@ -62,7 +63,7 @@ dependencies {
             'commons-beanutils:commons-beanutils:1.9.3',
             'org.apache.commons:commons-lang3',
 
-            'org.jskele:lib-values:1.0',
+            'org.jskele:jskele-values:2.0',
 
             'com.mitchellbosecke:pebble:2.4.0',
     )
