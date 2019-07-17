@@ -1,6 +1,6 @@
 package app.data;
 
-import org.jskele.libs.values.UuidValue;
+import org.jskele.values.UuidValue;
 
 import java.util.UUID;
 

@@ -2,7 +2,7 @@ package app.data;
 
 import lombok.*;
 import org.jskele.libs.dao.EntityRow;
-import org.jskele.libs.values.StringValue;
+import org.jskele.values.StringValue;
 
 @Getter
 @Builder(toBuilder = true)

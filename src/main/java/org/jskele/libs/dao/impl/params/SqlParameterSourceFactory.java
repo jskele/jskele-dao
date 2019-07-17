@@ -1,10 +1,10 @@
 package org.jskele.libs.dao.impl.params;
 
 import lombok.RequiredArgsConstructor;
-import org.jskele.libs.values.LongValue;
-import org.jskele.libs.values.StringValue;
-import org.jskele.libs.values.UuidValue;
-import org.jskele.libs.values.ValueClass;
+import org.jskele.values.LongValue;
+import org.jskele.values.StringValue;
+import org.jskele.values.UuidValue;
+import org.jskele.values.ValueClass;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Component;
