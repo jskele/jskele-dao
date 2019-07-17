@@ -1,9 +1,9 @@
 package app.data;
 
-import org.jskele.libs.dao.CrudDao;
-import org.jskele.libs.dao.Dao;
-import org.jskele.libs.dao.ExcludeNulls;
-import org.jskele.libs.dao.GenerateSql;
+import org.jskele.dao.CrudDao;
+import org.jskele.dao.Dao;
+import org.jskele.dao.ExcludeNulls;
+import org.jskele.dao.GenerateSql;
 
 @Dao
 public interface TestTableWithUuidIdDao extends CrudDao<TestTableWithUuidIdRow, TestTableWithUuidIdRowId> {
