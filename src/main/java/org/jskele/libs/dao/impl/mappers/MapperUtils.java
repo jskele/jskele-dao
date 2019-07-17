@@ -1,6 +1,6 @@
 package org.jskele.libs.dao.impl.mappers;
 
-import org.jskele.libs.values.ValueClass;
+import org.jskele.values.ValueClass;
 import org.springframework.core.ResolvableType;
 import org.springframework.jdbc.support.JdbcUtils;
 

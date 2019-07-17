@@ -10,7 +10,7 @@ import org.jskele.libs.dao.ExcludeNulls;
 import org.jskele.libs.dao.JsonValue;
 import org.jskele.libs.dao.impl.DaoUtils;
 import org.jskele.libs.dao.impl.params.ParameterExtractor;
-import org.jskele.libs.values.LongValue;
+import org.jskele.values.LongValue;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
