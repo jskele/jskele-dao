@@ -1,10 +1,10 @@
 package app.data;
 
 import app.data.TestTableRow.JsonColumn;
-import org.jskele.libs.dao.CrudDao;
-import org.jskele.libs.dao.Dao;
-import org.jskele.libs.dao.GenerateSql;
-import org.jskele.libs.dao.SqlTemplate;
+import org.jskele.dao.CrudDao;
+import org.jskele.dao.Dao;
+import org.jskele.dao.GenerateSql;
+import org.jskele.dao.SqlTemplate;
 
 import java.util.List;
 

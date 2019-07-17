@@ -1,7 +1,7 @@
 package app.data;
 
 import lombok.*;
-import org.jskele.libs.dao.EntityRow;
+import org.jskele.dao.EntityRow;
 import org.jskele.values.StringValue;
 
 @Getter

@@ -1,7 +1,7 @@
 package app.data;
 
-import org.jskele.libs.dao.Dao;
-import org.jskele.libs.dao.GenerateSql;
+import org.jskele.dao.Dao;
+import org.jskele.dao.GenerateSql;
 
 import java.util.List;
 
