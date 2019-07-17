@@ -5,8 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.jskele.libs.dao.DbSchemaResolver;
 import org.jskele.libs.dao.impl.MethodDetails;
 import org.jskele.libs.dao.impl.mappers.RowMapperFactory;
-import org.jskele.libs.dao.impl.params.DaoSqlParameterSource;
 import org.jskele.libs.dao.impl.params.ParameterExtractor;
+import org.jskele.libs.dao.impl.params.SqlParameterSourceFactory;
 import org.jskele.libs.dao.impl.sql.SqlSource;
 import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.RowMapper;
@@ -14,9 +14,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
 import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -25,7 +23,7 @@ import java.util.function.Supplier;
 public class DaoInvokerFactory {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
-    private final DataSource dataSource;
+    private final SqlParameterSourceFactory sqlParameterSourceFactory;
     private final RowMapperFactory rowMapperFactory;
     private final DbSchemaResolver dbSchemaResolver;
 
@@ -42,7 +40,7 @@ public class DaoInvokerFactory {
 
         if (details.isInsertUpdateOrDelete()) {
             return args -> {
-                SqlParameterSource params = parameterSource(extractor, args);
+                SqlParameterSource params = sqlParameterSourceFactory.create(extractor, args);
                 String sql = sqlSource.generateSql(args);
                 return jdbcTemplate.update(sql, params);
             };
@@ -50,7 +48,7 @@ public class DaoInvokerFactory {
 
         if (isBatchInsertOrUpdate) {
             return args -> {
-                SqlParameterSource[] paramsArray = parameterSourceArray(extractor, args);
+                SqlParameterSource[] paramsArray = sqlParameterSourceFactory.createArray(extractor, args);
                 String sql = sqlSource.generateSql(args);
                 return jdbcTemplate.batchUpdate(sql, paramsArray);
             };
@@ -60,7 +58,7 @@ public class DaoInvokerFactory {
 
         if (details.isQueryList()) {
             return args -> {
-                SqlParameterSource params = parameterSource(extractor, args);
+                SqlParameterSource params = sqlParameterSourceFactory.create(extractor, args);
                 String sql = sqlSource.generateSql(args);
                 RowMapper<?> rowMapper = rowMapperSupplier.get();
                 return jdbcTemplate.query(sql, params, rowMapper);
@@ -68,7 +66,7 @@ public class DaoInvokerFactory {
         }
 
         return args -> {
-            SqlParameterSource params = parameterSource(extractor, args);
+            SqlParameterSource params = sqlParameterSourceFactory.create(extractor, args);
             String sql = sqlSource.generateSql(args);
             RowMapper<?> rowMapper = rowMapperSupplier.get();
             List<?> results = jdbcTemplate.query(sql, params, rowMapper);
@@ -76,27 +74,4 @@ public class DaoInvokerFactory {
         };
     }
 
-    private SqlParameterSource[] parameterSourceArray(ParameterExtractor extractor, Object[] args) {
-        Collection<?> collection = (Collection<?>) args[0];
-
-        return collection.stream()
-                .map(arg -> parameterSource(extractor, new Object[]{arg}))
-                .toArray(SqlParameterSource[]::new);
-    }
-
-    private SqlParameterSource parameterSource(ParameterExtractor extractor, Object[] args) {
-        DaoSqlParameterSource daoSqlParameterSource = new DaoSqlParameterSource(dataSource);
-
-        String[] names = extractor.names();
-        Object[] values = extractor.values(args);
-
-        for (int i = 0; i < names.length; i++) {
-            String name = names[i];
-            Object value = values[i];
-
-            daoSqlParameterSource.addValue(name, value);
-        }
-
-        return daoSqlParameterSource;
-    }
 }
