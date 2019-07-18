@@ -5,11 +5,13 @@ import com.google.common.base.Converter;
 import com.google.common.base.Preconditions;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.jskele.dao.Dao;
 import org.jskele.dao.DbSchemaResolver;
 import org.jskele.dao.impl.DaoUtils;
 import org.jskele.dao.impl.params.ParameterExtractor;
 import org.jskele.dao.ExcludeNulls;
 import org.jskele.values.LongValue;
+import org.springframework.core.annotation.AnnotationUtils;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -62,15 +64,15 @@ class SqlGenerator {
     }
 
     private String generateUpdate(Object[] args) {
-        return "UPDATE " + tableName() + " SET " + updateColumns(args) + " WHERE id = :id";
+        return "UPDATE " + fullTableName() + " SET " + updateColumns(args) + " WHERE id = :id";
     }
 
     private String generateCount() {
-        return "SELECT count(*) FROM" + tableName() + whereCondition();
+        return "SELECT count(*) FROM" + fullTableName() + whereCondition();
     }
 
     private String generateExists() {
-        return "SELECT EXISTS(SELECT 1 FROM " + tableName() + whereCondition() + ")";
+        return "SELECT EXISTS(SELECT 1 FROM " + fullTableName() + whereCondition() + ")";
     }
 
     private String generateInsert(Object[] args, boolean isBatchInsert) {
@@ -87,7 +89,7 @@ class SqlGenerator {
             return generateInsert(new Object[]{firstRowArgs}, false);
         }
         Map<String, Object> paramValuesByName = getParamValuesByName(args);
-        return "INSERT INTO " + tableName() + " (" + insertColumns(paramValuesByName) + ")" +
+        return "INSERT INTO " + fullTableName() + " (" + insertColumns(paramValuesByName) + ")" +
                 " VALUES (" + insertValues(paramValuesByName) + ")" + insertReturning();
     }
 
@@ -101,11 +103,11 @@ class SqlGenerator {
     }
 
     private String generateDelete() {
-        return "DELETE FROM " + tableName() + whereCondition();
+        return "DELETE FROM " + fullTableName() + whereCondition();
     }
 
     private String generateSelect() {
-        return "SELECT " + selectColumns() + " FROM " + tableName() + whereCondition();
+        return "SELECT " + selectColumns() + " FROM " + fullTableName() + whereCondition();
     }
 
     private String generateSelectForUpdate() {
@@ -209,16 +211,25 @@ class SqlGenerator {
         return esc(convert(name)) + " = " + asNamedParameter(name);
     }
 
-    private String tableName() {
-        String daoName = daoClass.getSimpleName();
-        String camelTableName = StringUtils.removeEnd(daoName, "Dao");
-
-        String tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, camelTableName);
+    private String fullTableName() {
+        String tableName = tableName();
 
         String schema = detectSchema();
 
         String prefix = StringUtils.isBlank(schema) ? "" : esc(schema) + ".";
         return prefix + esc(tableName);
+    }
+
+    private String tableName() {
+        Dao annotation = AnnotationUtils.findAnnotation(daoClass, Dao.class);
+        if (StringUtils.isNotBlank(annotation.table())) {
+            return annotation.table();
+        }
+
+        String daoName = daoClass.getSimpleName();
+        String camelTableName = StringUtils.removeEnd(daoName, "Dao");
+
+        return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, camelTableName);
     }
 
     private String detectSchema() {
