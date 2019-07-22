@@ -49,6 +49,9 @@ public class DaoInvokerFactory {
         if (isBatchInsertOrUpdate) {
             return args -> {
                 SqlParameterSource[] paramsArray = sqlParameterSourceFactory.createArray(extractor, args);
+                if (paramsArray.length == 0) {
+                    return new int[0];
+                }
                 String sql = sqlSource.generateSql(args);
                 return jdbcTemplate.batchUpdate(sql, paramsArray);
             };
