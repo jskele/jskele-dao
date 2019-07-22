@@ -19,4 +19,9 @@ public @interface Dao {
      */
     String schema() default "";
 
+    /**
+     * The table name used in generated SQLs. If empty, then the name is derived from the class name.
+     */
+    String table() default "";
+
 }
