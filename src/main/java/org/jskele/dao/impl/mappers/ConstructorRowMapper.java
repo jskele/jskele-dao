@@ -117,7 +117,7 @@ public class ConstructorRowMapper<T> implements RowMapper<T> {
             msg += String.format(", excess columns: %s", excessColumns);
         }
 
-        throw new IllegalStateException(msg);
+        log.warn(msg);
     }
 
     private String getParameterNameForColumn(ResultSetMetaData metaData, int columnIndex) throws SQLException {
