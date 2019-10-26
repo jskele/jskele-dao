@@ -14,7 +14,7 @@ import org.springframework.context.index.CandidateComponentsIndexLoader;
 import org.springframework.stereotype.Component;
 
 import java.beans.Introspector;
-import java.util.Set;
+import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
@@ -23,17 +23,20 @@ public class DaoRegistrator implements BeanDefinitionRegistryPostProcessor {
     @Override
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry)
             throws BeansException {
-        CandidateComponentsIndex index = CandidateComponentsIndexLoader.loadIndex(null);
+        Stream<? extends Class<?>> daoBeanCandidateInterfaces = findDaoBeanCandidateInterfaces();
 
+        daoBeanCandidateInterfaces
+                .forEach(daoClass -> register(daoClass, registry));
+    }
+
+    Stream<Class<?>> findDaoBeanCandidateInterfaces() {
+        CandidateComponentsIndex index = CandidateComponentsIndexLoader.loadIndex(null);
         if (index == null) {
             throw new IllegalStateException("Spring component index not found, please add spring-context-indexer annotation processor");
         }
 
-        Set<String> candidateTypes = index.getCandidateTypes("", Dao.class.getName());
-
-        candidateTypes.stream()
-                .map(this::loadClass)
-                .forEach(daoClass -> register(daoClass, registry));
+        return index.getCandidateTypes("", Dao.class.getName()).stream()
+                .map(this::loadClass);
     }
 
     private void register(Class<?> daoClass, BeanDefinitionRegistry registry) {
