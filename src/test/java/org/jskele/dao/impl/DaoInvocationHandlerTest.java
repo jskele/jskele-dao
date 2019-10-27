@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DataRetrievalFailureException;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -361,7 +362,7 @@ public class DaoInvocationHandlerTest {
         fail("Expected exception, got " + result);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void givenJsonValueInSearchConstraint_find_failsWithExceptionAsImplementationIsntEnabled() {
         // Given
         long timestamp = System.currentTimeMillis();
@@ -374,11 +375,12 @@ public class DaoInvocationHandlerTest {
                 .build();
         dao.insert(row2);
         // When
-        List<TestTableRow> results = dao.findByJsonColumn(row2.getJsonColumn());
-        fail("Expected that usage of JsonValue in SQL WHERE clause isn't enabled (and throws exception) - not sure if it should be enabled or not");
-        // Then
-        assertThat(results.size(), equalTo(1));
-        assertThat(results.get(0).toBuilder().id(null).build(), equalTo(row2));
+        try {
+            dao.findByJsonColumn(row2.getJsonColumn());
+            fail("Expected that usage of JsonValue in SQL WHERE clause isn't enabled (and throws exception) - not sure if it should be enabled or not");
+        } catch (BadSqlGrammarException e) {
+            // Expected
+        }
     }
 
     @Test
