@@ -83,7 +83,7 @@ dependencies {
             'ru.yandex.qatools.embed:postgresql-embedded:2.6',
     )
 
-    testRuntime(
+    testRuntimeOnly(
             'org.postgresql:postgresql',
             'org.springframework.boot:spring-boot-starter-logging',
     )
