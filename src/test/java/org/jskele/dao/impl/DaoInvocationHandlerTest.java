@@ -3,15 +3,15 @@ package org.jskele.dao.impl;
 import app.data.*;
 import app.data.TestTableRow.JsonColumn;
 import org.hamcrest.MatcherAssert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -28,10 +28,11 @@ import static com.google.common.collect.Lists.newArrayList;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @SpringBootTest
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 public class DaoInvocationHandlerTest {
 
     @Autowired
@@ -348,7 +349,7 @@ public class DaoInvocationHandlerTest {
         assertThat(result.getStringColumn(), equalTo(stringColumn));
     }
 
-    @Test(expected = DataRetrievalFailureException.class)
+    @Test
     public void givenQueryForMultipleResult_find_throwsException() {
         // Given
         String stringColumn = "row1";
@@ -357,9 +358,11 @@ public class DaoInvocationHandlerTest {
                 .build()
         );
         // When
-        TestTableRow result = dao.findByStringColumn(stringColumn);
-        // Then
-        fail("Expected exception, got " + result);
+        assertThrows(DataRetrievalFailureException.class, () -> {
+            TestTableRow result = dao.findByStringColumn(stringColumn);
+            // Then
+            fail("Expected exception, got " + result);
+        });
     }
 
     @Test
@@ -375,12 +378,10 @@ public class DaoInvocationHandlerTest {
                 .build();
         dao.insert(row2);
         // When
-        try {
-            dao.findByJsonColumn(row2.getJsonColumn());
-            fail("Expected that usage of JsonValue in SQL WHERE clause isn't enabled (and throws exception) - not sure if it should be enabled or not");
-        } catch (BadSqlGrammarException e) {
-            // Expected
-        }
+        assertThrows(BadSqlGrammarException.class,
+                () -> dao.findByJsonColumn(row2.getJsonColumn()),
+                "Expected that usage of JsonValue in SQL WHERE clause isn't enabled (and throws exception) - not sure if it should be enabled or not"
+        );
     }
 
     @Test

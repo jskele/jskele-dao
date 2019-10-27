@@ -2,8 +2,9 @@ package org.jskele.dao.impl;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DaoUtilsTest {
 
@@ -17,7 +18,7 @@ public class DaoUtilsTest {
     @Test
     public void test() {
         String[] strings = DaoUtils.beanProperties(TestRow.class);
-        Assert.assertTrue(strings.length == 1);
+        assertTrue(strings.length == 1);
     }
 
 }
