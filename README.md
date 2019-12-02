@@ -32,13 +32,32 @@ add `-parameters` to
 Settings -> Build, Execution, Deployment -> Compiler -> Java Compiler -> Additional command line parameters
 
 #### Make `@Dao` interfaces discoverable for this library
-##### Set up spring-component-indexer
+
+There are two options how to make your `@Dao` classes discoverable for this project
+
+##### Option a) Set up spring-component-indexer
 As this library contains `META-INF/spring.components`,
 Spring 5 doesn't perform slow classpath scanning and assumes all Spring bean candidates are available via `spring.components` files.
 To generate `spring.components` file for components in your own project as well, add dependency to
 [spring-context-indexer](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#beans-scanning-index).
 
-> NB! current version doesn't work when spring components index is ignored!
+##### Option b) Provide base package names of `@Dao` classes for component scanning
+If you can't use component indexer
+(for example because one of the libraries in your project relies on classpath scanning)
+you can
+1) disable Spring 5 component indexing via `spring.properties` in the classpath:
+`spring.index.ignore=true`
+2) create bean that provides base packages for your `@Dao` classes:
+```Java
+    @Bean(org.jskele.dao.impl.DaoRegistrator.JSKELE_DAO_PACKAGES_BEAN_NAME)
+    String[] jskeleDaoPackages() {
+        return new String[]{"com.example.myproject.dao"};
+    }
+```
+3) Add runtime dependency
+`org.reflections:reflections:0.9.11`
+that is needed when using this option to find classes from packages you provide.
+
 
 #### Specify database schema
 

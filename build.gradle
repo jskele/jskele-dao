@@ -50,6 +50,8 @@ dependencies {
 
     compileOnly(
             'org.projectlombok:lombok',
+            // if application disables classpath scanning, then reflections is used to find `@Dao` classes
+            'org.reflections:reflections:0.9.11',
     )
 
     api(
