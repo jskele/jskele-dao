@@ -1,9 +1,14 @@
 package org.jskele.dao.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.jskele.dao.Dao;
+import org.reflections.Reflections;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -11,14 +16,21 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProce
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.index.CandidateComponentsIndex;
 import org.springframework.context.index.CandidateComponentsIndexLoader;
+import org.springframework.core.SpringProperties;
 import org.springframework.stereotype.Component;
 
 import java.beans.Introspector;
+import java.util.Collection;
+import java.util.Set;
 import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
-public class DaoRegistrator implements BeanDefinitionRegistryPostProcessor {
+public class DaoRegistrator implements BeanDefinitionRegistryPostProcessor, BeanFactoryAware {
+    public static final String JSKELE_DAO_PACKAGES_BEAN_NAME = "jskeleDaoPackages";
+
+    @Setter
+    private BeanFactory beanFactory;
 
     @Override
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry)
@@ -30,6 +42,15 @@ public class DaoRegistrator implements BeanDefinitionRegistryPostProcessor {
     }
 
     Stream<Class<?>> findDaoBeanCandidateInterfaces() {
+        boolean springComponentsIndexIgnored = SpringProperties.getFlag(CandidateComponentsIndexLoader.IGNORE_INDEX);
+        if (springComponentsIndexIgnored) {
+            String[] basePackages = basePackages();
+            return findDaoBeanCandidatesInterfacesFromPackages(basePackages);
+        }
+        return findDaoBeanCandidateInterfacesFromSpringComponentsIndex();
+    }
+
+    private Stream<Class<?>> findDaoBeanCandidateInterfacesFromSpringComponentsIndex() {
         CandidateComponentsIndex index = CandidateComponentsIndexLoader.loadIndex(null);
         if (index == null) {
             throw new IllegalStateException("Spring component index not found, please add spring-context-indexer annotation processor");
@@ -37,6 +58,28 @@ public class DaoRegistrator implements BeanDefinitionRegistryPostProcessor {
 
         return index.getCandidateTypes("", Dao.class.getName()).stream()
                 .map(this::loadClass);
+    }
+
+    private Stream<Class<?>> findDaoBeanCandidatesInterfacesFromPackages(String[] basePackages) {
+        return Stream.of(basePackages)
+                .map(this::findDaoClassesFromPackage)
+                .flatMap(Collection::stream);
+    }
+
+    private Set<Class<?>> findDaoClassesFromPackage(String appPackage) {
+        return new Reflections(appPackage).getTypesAnnotatedWith(Dao.class);
+    }
+
+    private String[] basePackages() {
+        try {
+            return beanFactory.getBean(JSKELE_DAO_PACKAGES_BEAN_NAME, String[].class);
+        } catch (NoSuchBeanDefinitionException e) {
+            throw new IllegalStateException("As using Spring components index is disabled, " +
+                    "you must provide packages of `@Dao` interfaces for classpath scanning with bean named " +
+                    "(using bean with name " + JSKELE_DAO_PACKAGES_BEAN_NAME + ") that returns `String[]`, " +
+                    "so Spring beans could be created for `@Dao` interfaces."
+            );
+        }
     }
 
     private void register(Class<?> daoClass, BeanDefinitionRegistry registry) {
