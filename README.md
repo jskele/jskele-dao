@@ -4,6 +4,7 @@
 ### Configuration
 
 #### Installing
+[![](https://jitpack.io/v/jskele/lib-dao.svg)](https://jitpack.io/#jskele/lib-dao)
 See [these instruction](https://jitpack.io/#jskele/lib-dao)
 for adding this library as a dependency to your project.
 
