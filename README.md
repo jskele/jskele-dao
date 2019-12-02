@@ -3,6 +3,10 @@
  
 ### Configuration
 
+#### Installing
+See [these instruction](https://jitpack.io/#jskele/lib-dao)
+for adding this library as a dependency to your project.
+
 #### Add Java compiler option `-parameters`
 Adding Java compiler option `-parameters` is needed,
 so that lib-dao could figure out parameter names when generating SQL
@@ -27,15 +31,14 @@ For example in case of IntelliJ IDEA:
 add `-parameters` to
 Settings -> Build, Execution, Deployment -> Compiler -> Java Compiler -> Additional command line parameters
 
-#### Specify base package used for scanning for Dao interfaces
- 
-**By default** application bean base package is used to scan for Dao classes. 
- 
-`jskele.dao.packages` optional property can be used to specify custom list of packages to scan.
+#### Make `@Dao` interfaces discoverable for this library
+##### Set up spring-component-indexer
+As this library contains `META-INF/spring.components`,
+Spring 5 doesn't perform slow classpath scanning and assumes all Spring bean candidates are available via `spring.components` files.
+To generate `spring.components` file for components in your own project as well, add dependency to
+[spring-context-indexer](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#beans-scanning-index).
 
-```
-jskele.dao.packages=com.package1,org.package2
-```
+> NB! current version doesn't work when spring components index is ignored!
 
 #### Specify database schema
 

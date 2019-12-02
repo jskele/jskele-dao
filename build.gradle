@@ -38,6 +38,10 @@ dependencyManagement {
     }
 }
 
+ext {
+    jUnitVersion = '5.2.0'
+}
+
 dependencies {
     annotationProcessor(
             "org.springframework:spring-context-indexer",
@@ -79,13 +83,17 @@ dependencies {
 
     testImplementation(
             'org.springframework.boot:spring-boot-starter-jdbc',
-            'org.springframework.boot:spring-boot-starter-test',
             'ru.yandex.qatools.embed:postgresql-embedded:2.6',
+            "org.junit.jupiter:junit-jupiter-params:$jUnitVersion",
     )
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'junit', module: 'junit'
+    }
 
-    testRuntime(
+    testRuntimeOnly(
             'org.postgresql:postgresql',
             'org.springframework.boot:spring-boot-starter-logging',
+            "org.junit.jupiter:junit-jupiter-engine:$jUnitVersion",
     )
 
     sourceSets {
@@ -95,6 +103,10 @@ dependencies {
             }
         }
     }
+}
+
+test {
+    useJUnitPlatform()
 }
 
 bintray {
