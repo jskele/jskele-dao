@@ -63,20 +63,19 @@ dependencies {
     )
 
     implementation(
-            'com.google.guava:guava',
+            'org.apache.commons:commons-lang3',
             'org.springframework:spring-jdbc',
             'org.springframework.boot:spring-boot-autoconfigure',
+
             'commons-beanutils:commons-beanutils:1.9.3',
-            'org.apache.commons:commons-lang3',
-
-            'org.jskele:jskele-values:2.0',
-
+            'com.google.guava:guava:25.1-jre',
             'com.mitchellbosecke:pebble:2.4.0',
+            'org.jskele:jskele-values:2.0',
     )
 
     testAnnotationProcessor(
-            "org.springframework:spring-context-indexer",
             "org.projectlombok:lombok",
+            "org.springframework:spring-context-indexer",
     )
 
     testCompileOnly(
